@@ -1,8 +1,6 @@
 package main
 import (
-	"fmt"
 	"encoding/json"
-	"strings"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -46,7 +44,6 @@ func HandleQuery(
 
 func queryForCache(cache Cache, query Query) [] map[string]interface{} {
 	rows := cache[query.EventLog]
-
 	
 	filteredRows := [] map[string]interface{}{}
 	for _, row := range rows {
@@ -69,6 +66,7 @@ func resultMatches(row map[string]interface{}, query Query) bool {
 		valueList:= whereClause.ValueList
 		valueList = append(valueList, whereClause.Value)
 		rowMatch := false
+
 		for _, desiredValue := range valueList {
 			if (rowValue == nil) {
 				if (desiredValue == 0.0 || desiredValue == nil) {
@@ -76,16 +74,7 @@ func resultMatches(row map[string]interface{}, query Query) bool {
 					break;
 				}
 			}
-
-			// is it a float or string?
-			switch desiredValue.(type) {
-			case float64:
-				rowMatch = rowMatch || rowValue == desiredValue
-			case string:
-				rowMatch = rowMatch ||  strings.Contains(
-					strings.ToLower(fmt.Sprintf("%v", rowValue)),
-					strings.ToLower(fmt.Sprintf("%v", desiredValue)))
-			}
+			rowMatch = rowMatch || rowValue == desiredValue
 		}
 		matches = matches && rowMatch
 	}

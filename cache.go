@@ -39,7 +39,17 @@ func LoadCache(fileName string) Cache{
 
 	var cache Cache 
 	json.Unmarshal(bytes, &cache)
+	for _, eventCache := range cache {
+		ReverseSlice(eventCache)
+	}
 	return cache;
+}
+
+func ReverseSlice(s EventCache) EventCache {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+    s[i], s[j] = s[j], s[i]
+	}
+	return s
 }
 
 

@@ -13,8 +13,8 @@ type Query struct {
 	EventLog string `json:"eventLog"`
 	SelectStatements []string `json:"selectStatements"`
 	LimitSize int `json:"limitSize"`
-	FromBlockNumber int `json:"fromBlockNumber"`
-	ToBlockNumber int `json:"toBlockNumber"`
+	FromBlockNumber float64 `json:"fromBlockNumber"`
+	ToBlockNumber float64 `json:"toBlockNumber"`
 	WhereClauses []WhereClause `json:"whereClauses"`
 }
 
@@ -35,7 +35,6 @@ func HandleQuery(
 		log.Fatal(err)
 	}
 	bodyString := string(bodyBytes)
-	fmt.Println(bodyString);
 	query := Query{}
 	json.Unmarshal([]byte(bodyString), &query)
 	
@@ -46,12 +45,14 @@ func HandleQuery(
 }
 
 func queryForCache(cache Cache, query Query) [] map[string]interface{} {
-	fmt.Println(query.EventLog)
 	rows := cache[query.EventLog]
 
+	
 	filteredRows := [] map[string]interface{}{}
-
 	for _, row := range rows {
+		if (query.LimitSize != 0 && len(filteredRows) > query.LimitSize) {
+			break
+		}
 		if (resultMatches(row, query)) {
 			filteredRows = append(filteredRows, row)
 		}
@@ -62,20 +63,40 @@ func queryForCache(cache Cache, query Query) [] map[string]interface{} {
 func resultMatches(row map[string]interface{}, query Query) bool {
 	// go through the whereclause
 	matches := true
+
 	for _, whereClause := range query.WhereClauses {
 		rowValue := row[whereClause.Name]
-		desiredValue := whereClause.Value
+		valueList:= whereClause.ValueList
+		valueList = append(valueList, whereClause.Value)
+		rowMatch := false
+		for _, desiredValue := range valueList {
+			if (rowValue == nil) {
+				if (desiredValue == 0.0 || desiredValue == nil) {
+					rowMatch = true
+					break;
+				}
+			}
 
-		// is it a float or string?
-		switch desiredValue.(type) {
-		case float64:
-			matches = matches && rowValue == desiredValue
-		case string:
-			matches = matches && strings.Contains(
-				strings.ToLower(fmt.Sprintf("%v", rowValue)),
-				strings.ToLower(fmt.Sprintf("%v", desiredValue)))
+			// is it a float or string?
+			switch desiredValue.(type) {
+			case float64:
+				rowMatch = rowMatch || rowValue == desiredValue
+			case string:
+				rowMatch = rowMatch ||  strings.Contains(
+					strings.ToLower(fmt.Sprintf("%v", rowValue)),
+					strings.ToLower(fmt.Sprintf("%v", desiredValue)))
+			}
+		}
+		matches = matches && rowMatch
+	}
+		
+	blockNumber := row["blockNumber"]
+	if flt_blockNumber , ok := blockNumber.(float64); ok {
+		if (flt_blockNumber >= query.FromBlockNumber &&
+			(query.ToBlockNumber == 0 || flt_blockNumber <= query.ToBlockNumber)) {
+			return matches;
 		}
 	}
-	return matches
+	return false;
 }
 	

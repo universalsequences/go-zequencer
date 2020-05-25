@@ -2,8 +2,8 @@ package main
 import (
 	"fmt"
 	"encoding/json"
+	"strings"
 	"io/ioutil"
-	"html"
 	"log"
 	"net/http"
 )
@@ -39,6 +39,43 @@ func HandleQuery(
 	query := Query{}
 	json.Unmarshal([]byte(bodyString), &query)
 	
-	fmt.Fprintf(w, "Hello, %q", html.EscapeString(query.Address))
+	results := queryForCache(caches[query.Address], query)
+	bytes, err := json.Marshal(results)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(bytes)
+}
+
+func queryForCache(cache Cache, query Query) [] map[string]interface{} {
+	fmt.Println(query.EventLog)
+	rows := cache[query.EventLog]
+
+	filteredRows := [] map[string]interface{}{}
+
+	for _, row := range rows {
+		if (resultMatches(row, query)) {
+			filteredRows = append(filteredRows, row)
+		}
+	}
+	return filteredRows
+}
+
+func resultMatches(row map[string]interface{}, query Query) bool {
+	// go through the whereclause
+	matches := true
+	for _, whereClause := range query.WhereClauses {
+		rowValue := row[whereClause.Name]
+		desiredValue := whereClause.Value
+
+		// is it a float or string?
+		switch desiredValue.(type) {
+		case float64:
+			matches = matches && rowValue == desiredValue
+		case string:
+			matches = matches && strings.Contains(
+				strings.ToLower(fmt.Sprintf("%v", rowValue)),
+				strings.ToLower(fmt.Sprintf("%v", desiredValue)))
+		}
+	}
+	return matches
 }
 	

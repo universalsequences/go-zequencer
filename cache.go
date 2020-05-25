@@ -20,7 +20,8 @@ func LoadAllCaches(directoryPath string) Caches {
 
 	caches := make(Caches)
 	for _, file := range files {
-		caches[file.Name()] = LoadCache(directoryPath + file.Name())
+		var contractAddress = file.Name()[0:len(file.Name())-len(".json")]
+		caches[contractAddress] = LoadCache(directoryPath + file.Name())
 	}
 	return caches;
 }

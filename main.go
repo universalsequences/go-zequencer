@@ -11,6 +11,6 @@ func main() {
 	http.HandleFunc("/query", func(w http.ResponseWriter, r *http.Request) {
 		HandleQuery(w, r, caches)
 	})
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":4567", nil))
 }
 

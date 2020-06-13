@@ -25,20 +25,29 @@ type WhereClause struct {
 func HandleQuery(
 	w http.ResponseWriter,
 	r *http.Request,
-	caches Caches) {
+	caches Caches,
+	cachedQueries *CachedQueries) {
 
 	defer r.Body.Close()
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
+	w.Header().Set("Content-Type", "application/json")
+
 	bodyString := string(bodyBytes)
+	if val, ok := cachedQueries.getQuery(bodyString); ok {
+		w.Write(val)
+		return
+	}
+
 	query := Query{}
 	json.Unmarshal([]byte(bodyString), &query)
 	
 	results := queryForCache(caches[query.Address], query)
 	bytes, err := json.Marshal(results)
-	w.Header().Set("Content-Type", "application/json")
+	cachedQueries.newQuery(bodyString, bytes)
+
 	w.Write(bytes)
 }
 

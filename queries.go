@@ -18,6 +18,10 @@ type CachedQueries struct {
 	mutex sync.RWMutex
 }
 
+func (c *CachedQueries) Clear() {
+	c.Queue.Init()
+}
+
 func (c *CachedQueries) newQuery(key string, data []byte ) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()

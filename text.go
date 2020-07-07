@@ -15,7 +15,7 @@ type TextQuery struct {
 func HandleTextQuery(
 	w http.ResponseWriter,
 	r *http.Request,
-	caches Caches) {
+	caches *Caches) {
 
 	defer r.Body.Close()
 	bodyBytes, err := ioutil.ReadAll(r.Body)

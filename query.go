@@ -25,7 +25,7 @@ type WhereClause struct {
 func HandleQuery(
 	w http.ResponseWriter,
 	r *http.Request,
-	caches Caches,
+	caches *Caches,
 	cachedQueries *CachedQueries) {
 
 	defer r.Body.Close()
@@ -44,7 +44,7 @@ func HandleQuery(
 	query := Query{}
 	json.Unmarshal([]byte(bodyString), &query)
 	
-	results := queryForCache(caches[query.Address], query)
+	results := queryForCache((*caches)[query.Address], query)
 	bytes, err := json.Marshal(results)
 	cachedQueries.newQuery(bodyString, bytes)
 

@@ -24,7 +24,7 @@ type SampleQueryResults struct {
 func HandleSampleQuery(
 	w http.ResponseWriter,
 	r *http.Request,
-	caches Caches) {
+	caches *Caches) {
 	defer r.Body.Close()
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -42,8 +42,8 @@ func HandleSampleQuery(
 		Address: GUILD_SAMPLES,
 		EventLog: "SampleTagged(bytes32,bytes32,uint32)",
 		SelectStatements: []string{"tag"},
-		WhereClauses: []WhereClause{whereClause},
-		LimitSize: 1}
+		WhereClauses: []WhereClause{whereClause}}
+
 
 	videoQuery := Query{
 		Address: GUILD_SAMPLES,
@@ -68,10 +68,10 @@ func HandleSampleQuery(
 
 	sampleData := SampleQueryResults{}
 
-	tagResults := queryForCache(caches[GUILD_SAMPLES], tagsQuery)
-	titleResults := queryForCache(caches[GUILD_SAMPLES], titleQuery)
-	coverArtResults := queryForCache(caches[GUILD_SAMPLES], coverArtQuery)
-	videoResults := queryForCache(caches[GUILD_SAMPLES], videoQuery)
+	tagResults := queryForCache((*caches)[GUILD_SAMPLES], tagsQuery)
+	titleResults := queryForCache((*caches)[GUILD_SAMPLES], titleQuery)
+	coverArtResults := queryForCache((*caches)[GUILD_SAMPLES], coverArtQuery)
+	videoResults := queryForCache((*caches)[GUILD_SAMPLES], videoQuery)
 
 	if (len(tagResults) >= 1) {
 		for _, s := range tagResults {

@@ -19,7 +19,8 @@ type CachedQueries struct {
 }
 
 func (c *CachedQueries) Clear() {
-	c.Queue.Init()
+	c.Queue = c.Queue.Init()
+	c.Queries = make(map[string]CachedQuery)
 }
 
 func (c *CachedQueries) newQuery(key string, data []byte ) {

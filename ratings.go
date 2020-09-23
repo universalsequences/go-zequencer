@@ -75,3 +75,15 @@ func LoadRatings(caches Caches) RatingCache {
 	
 	return cache
 }
+
+func getRatings(cache *RatingCache, ids []string) map[string]int {
+	ratings := map[string]int{}
+	for _, id := range ids {
+		if _, ok := (*cache)[id]; ok {
+			ratings[id] = (*cache)[id]
+		} else {
+			ratings[id] = 0
+		}
+	}
+	return ratings
+}

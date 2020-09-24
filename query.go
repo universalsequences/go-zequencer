@@ -6,22 +6,6 @@ import (
 	"net/http"
 )
 
-type Query struct {
-	Address string `json:"address"`
-	EventLog string `json:"eventLog"`
-	SelectStatements []string `json:"selectStatements"`
-	LimitSize int `json:"limitSize"`
-	FromBlockNumber float64 `json:"fromBlockNumber"`
-	ToBlockNumber float64 `json:"toBlockNumber"`
-	WhereClauses []WhereClause `json:"whereClauses"`
-}
-
-type WhereClause struct {
-	Name string `json:"name"`
-	Value interface{} `json:"value"`
-	ValueList []interface{}`json:"valueList"`
-}
-
 func HandleQuery(
 	w http.ResponseWriter,
 	r *http.Request,

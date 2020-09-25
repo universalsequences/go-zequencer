@@ -34,6 +34,11 @@ func HandleProjectEdits(
 func runProjectEdits(caches *Caches, query ProjectEditsQuery) []Project {
 	projects := []Project{}
 	project := getProject(caches, query.Project)
+	if (project.PreviousSequence == "") {
+		return projects
+	}
+	project = getProject(caches, project.PreviousSequence)
+
 	for project.PreviousSequence != "" {
 		projects = append(
 			projects,

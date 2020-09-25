@@ -113,7 +113,7 @@ func collapseProjects(projects []Project) []Project {
 		if _, ok := projectToNext[project.NewSequence]; !ok {
 			// has no next so its the top
 			edits := len(getAllEdits(project, idToProject))
-			project.Edits = edits
+			project.Edits = edits - 1
 			collapsed = append(
 				collapsed,
 				project)

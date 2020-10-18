@@ -54,7 +54,7 @@ func getReleases(caches *Caches, discogsIds []interface{}) map[float64]Release {
 			ReleaseType: result["releaseType"].(string),
 			ReleaseId: result["releaseId"].(float64),
 			CoverArtHash: result["coverArtHash"].(string),
-			ReleaseName: strings.TrimPrefix(result["releaseName"].(string), "RECORD"),
+			ReleaseName: strings.TrimPrefix(strings.TrimPrefix(result["releaseName"].(string), "RECORD"), "SAMPLE_PACK&"),
 			ArtistName: result["artistName"].(string),
 		}
 		ret[releaseId] = release

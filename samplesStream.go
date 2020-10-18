@@ -27,6 +27,8 @@ type RatedSound struct {
 	Rating int
 }
 
+const PART_RATIO = 0.7
+
 func HandleSamplesStreamQuery(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -212,14 +214,15 @@ func getProjectCountForSamples(caches *Caches, ids []string) map[string]int{
 }
 
 func shuffleInParts(ids []string) [] string {
-	partSize := 15
-
 	rand.Seed(time.Now().UnixNano())
+
+	partSize := int(math.Floor(math.Pow(float64(len(ids)) , PART_RATIO)))
+	fmt.Printf("Number of results to shuffle %v partSize=%v\n", len(ids), partSize)
 
 	parts := [][]string{}
 	current := []string{}
 	for i, id := range ids {
-		if (i % partSize  == partSize - 1) {
+		if (i % partSize == partSize - 1) {
 			rand.Shuffle(len(current), func(i, j int) { current[i], current[j] = current[j], current[i] })
 			parts = append(
 				parts,

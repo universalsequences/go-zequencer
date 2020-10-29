@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"os"
 	"container/list"
-	"fmt"
 )
 
 func main() {
-	caches := LoadAllCaches(os.Args[1])
+	directoryPath := os.Args[1]
+	caches := LoadAllCaches(directoryPath)
 	cachedQueries := CachedQueries{Queries: make(map[string]CachedQuery), Queue: list.New()}
 	searchCachedQueries := CachedQueries{Queries: make(map[string]CachedQuery), Queue: list.New()}
 	projectsCachedQueries := CachedQueries{Queries: make(map[string]CachedQuery), Queue: list.New()}
@@ -46,13 +46,16 @@ func main() {
 	})
 
 	http.HandleFunc("/reload", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Reload called so clearing cache")
-		cachedQueries.Clear()
-		projectsCachedQueries.Clear()
-		streamCachedQueries.Clear()
-		prePopulateCache(&caches, &ratings, &searchCachedQueries)
-		caches = LoadAllCaches(os.Args[1])
-		ratings = LoadRatings(caches)
+		HandleReloadRequest(
+			w,
+			r,
+			directoryPath,
+			&caches,
+			&ratings,
+			&searchCachedQueries,
+			&projectsCachedQueries,
+			&cachedQueries,
+			&streamCachedQueries);
 	})
 	http.HandleFunc("/textSearch", func(w http.ResponseWriter, r *http.Request) {
 		HandleTextQuery(w, r, &caches)

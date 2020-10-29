@@ -6,6 +6,7 @@ import (
 )
 
 const MAX_CACHE_SIZE = 2000
+const MIN_QUERY_SIZE = 20
 
 type CachedQuery struct {
 	Data []byte 
@@ -24,6 +25,9 @@ func (c *CachedQueries) Clear() {
 }
 
 func (c *CachedQueries) newQuery(key string, data []byte ) {
+	if (len(data) < MIN_QUERY_SIZE) {
+		return;
+	}
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if (c.Queue.Len() > MAX_CACHE_SIZE) {

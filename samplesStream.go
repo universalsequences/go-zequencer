@@ -24,7 +24,7 @@ type SamplesStreamResults struct {
 
 type RatedSound struct {
 	Id string
-	Rating int
+	Rating float64 
 }
 
 const PART_RATIO = 0.7
@@ -91,7 +91,7 @@ func runSamplesStreamQuery(
 			ratedSounds,
 			RatedSound{
 				Id: id,
-				Rating: int(math.Pow(float64((*ratingsCache)[id]), 3)) + (count),
+				Rating: math.Pow((float64((1.0 + (*ratingsCache)[id])) / 5.0), 2) * float64(count),
 			})
 	}
 	sort.Sort(ByRating(ratedSounds))

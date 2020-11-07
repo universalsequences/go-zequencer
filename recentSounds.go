@@ -5,7 +5,7 @@ import (
 	"sort"
 )
 
-func getRecentSounds(caches *Caches, searchTerm string) []SampleResult {
+func getRecentSounds(caches *Caches, searchTerm string, guildId float64) []SampleResult {
 	filterByTitle := false
 	soundIds := []interface{}{}
 
@@ -18,10 +18,11 @@ func getRecentSounds(caches *Caches, searchTerm string) []SampleResult {
 			soundIds = getSoundsWithOrTags(caches, matchingTags)
 		}
 	}
+
 	whereClauses := []WhereClause{
 			WhereClause{
 				Name: "guildId",
-				Value: 0.0,
+				Value: guildId,
 			}}
 	if (len(soundIds) > 0) {
 		whereClauses = append(

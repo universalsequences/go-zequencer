@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"time"
 	"io/ioutil"
-	"fmt"
 	"log"
 	"net/http"
 	"sort"
@@ -46,7 +45,6 @@ func HandleSamplesStreamQuery(
 
 	query := SamplesStreamQuery{}
 	json.Unmarshal([]byte(bodyString), &query)
-	fmt.Println(query)
 	
 	bytes, err := json.Marshal(runSamplesStreamQuery(caches, ratingsCache, query, bodyString, streamCache))
 	w.Write(bytes)
@@ -217,7 +215,6 @@ func shuffleInParts(ids []string) [] string {
 	rand.Seed(time.Now().UnixNano())
 
 	partSize := int(math.Floor(math.Pow(float64(len(ids)) , PART_RATIO)))
-	fmt.Printf("Number of results to shuffle %v partSize=%v\n", len(ids), partSize)
 
 	parts := [][]string{}
 	current := []string{}

@@ -43,6 +43,7 @@ func HandleReloadRequest(
 			projectsCachedQueries.Clear()
 		} else if (contract == GUILD_SAMPLES) {
 			streamCachedQueries.Clear()
+			searchCachedQueries.Clear()
 			prePopulateCache(caches, ratingsCache, searchCachedQueries)
 		}
 	}

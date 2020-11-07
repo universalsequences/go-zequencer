@@ -14,6 +14,7 @@ const blocksPerDay = 6275
 
 type SearchQuery struct {
 	SearchTerm string `json:"searchTerm"`
+	GuildId float64 `json:"guildId"`
 }
 
 type QueryResults struct {
@@ -76,7 +77,7 @@ func HandleSearchQuery(
 }
 
 func prePopulateCache(caches *Caches, ratingsCache *RatingCache, cachedQueries *CachedQueries) {
-	bodyString := "{\"searchTerm\":\"\"}"
+	bodyString := "{\"searchTerm\":\"\",\"guildId\":0}"
 	query := SearchQuery{}
 	bytes, _ := json.Marshal(runQuery(caches, ratingsCache, query))
 	cachedQueries.newQuery(bodyString, bytes)
@@ -84,7 +85,7 @@ func prePopulateCache(caches *Caches, ratingsCache *RatingCache, cachedQueries *
 }
 
 func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []BlockResults {
-	recentSounds := getRecentSounds(caches, query.SearchTerm)
+	recentSounds := getRecentSounds(caches, query.SearchTerm, query.GuildId)
 	recentDiscogs := getRecentDiscogs(caches, recentSounds)
 	recentReleases := getRecentReleases(caches, recentDiscogs)
 	recentYoutubes := getRecentYoutubeSamples(caches, recentSounds)

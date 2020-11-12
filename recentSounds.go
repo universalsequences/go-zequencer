@@ -63,14 +63,18 @@ func getRecentSounds(caches *Caches, searchTerm string, guildId float64) []Sampl
 }
 
 func convertResults(results []map[string]interface{}) []SampleResult {
-	convertedResults := []SampleResult{}
+	uniqueResults := map[string]SampleResult{}
 
 	for _, result := range results {
 		converted := SampleResult{}
 		converted.Title = result["title"].(string)
 		converted.BlockNumber = result["blockNumber"].(float64)
 		converted.IpfsHash = result["ipfsHash"].(string)
-		convertedResults = append(convertedResults, converted)
+		uniqueResults[converted.IpfsHash] = converted
+	}
+	convertedResults := []SampleResult{}
+	for _, result := range uniqueResults {
+		convertedResults = append(convertedResults, result)
 	}
 	sort.Sort(ByBlock(convertedResults))
 	return convertedResults

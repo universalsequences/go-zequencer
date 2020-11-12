@@ -11,6 +11,7 @@ import (
 )
 	
 const blocksPerDay = 6275
+//const blocksPerDay = 6275*31;
 
 type SearchQuery struct {
 	SearchTerm string `json:"searchTerm"`
@@ -21,6 +22,7 @@ type QueryResults struct {
 	Unsourced map[string][]SampleResult `json:"unsourced"`
 	Youtube map[string][]SampleResult `json:"youtube"`
 	Discogs map[string][]SampleResult `json:"discogs"`
+	Resampled map[string][]SampleResult `json:"resampled"`
 	BlockNumber float64 `json:"blockNumber"`
 	Results []SampleResult `json:"results"`
 };
@@ -91,6 +93,7 @@ func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []Bl
 	recentYoutubes := getRecentYoutubeSamples(caches, recentSounds)
 	recentTags := getRecentTags(caches, recentSounds)
 	ratings := getRatings(ratingsCache, getSampleIds(recentSounds))
+	// usedIn := getUsedIn(caches, recentSounds);
 	sounds := combineAll(recentSounds, recentDiscogs, recentYoutubes, recentTags, ratings, recentReleases);
 	byDay := getByDay(sounds);
 	return partitionBySource(byDay, query.SearchTerm);

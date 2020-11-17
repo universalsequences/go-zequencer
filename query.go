@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sort"
+	"strings"
 )
 
 func HandleQuery(
@@ -36,9 +38,81 @@ func HandleQuery(
 }
 
 func queryForCache(cache Cache, query Query) [] map[string]interface{} {
-	rows := cache[query.EventLog]
+	results := [] map[string]interface{}{}
+	empty := true
+	for _, whereClause := range query.WhereClauses {
+		// each of these where clauses get AND'd together
+
+		// for each of these where clauses we do a binary search giving us
+		// results matching that where clause
+
+		// for example: guildId = 1 AND tag = "breaks"
+		// this would need to do 2 searches and then do an intersectiono
+
+		// ideally though the indices would do sub-sorting so
+		// within the guildId = 0 the tags would be sorted by tags
+
+		// so once its gone through the first key, it'll search through the second
+
+		valueList:= whereClause.ValueList
+		valueList = append(valueList, whereClause.Value)
+		if _, ok := cache[query.EventLog][whereClause.Name]; ok {
+			// search by Name in the 
+			if (empty) {
+				results = cache[query.EventLog][whereClause.Name]
+				empty = false
+			}
+			results = searchByKey(results, whereClause.Name, valueList)
+		} else {
+			if (empty) {
+				results = cache[query.EventLog]["blockNumber"]
+				empty = false
+			}
+			results = naiveSearch(results, query)
+		}
+	}
+	if (empty) {
+		for _, values := range cache[query.EventLog] {
+			for _, value := range values {
+				results = append(results, value)
+			}
+			break
+		}
+	}
+	// sort by block number
+	sort.Slice(results, func (i, j int) bool {
+		return results[i]["blockNumber"].(float64) > results[j]["blockNumber"].(float64)
+	});
 	
+	return results 
+}
+
+func searchByKey(rows []map[string]interface{}, name string, valueList []interface{}) [] map[string]interface{} {
+	results := []map[string]interface{}{}
+	for _, value := range valueList {
+		x := sort.Search(len(rows), func (i int) bool {
+			if _, ok := value.(string); ok {
+				return strings.Compare(rows[i][name].(string), value.(string)) >= 0;
+			} else if _, ok := value.(float64); ok {
+				return rows[i][name].(float64) >= value.(float64)
+			} else {
+				return false;
+			}
+		});
+		for i := x; i < len(rows); i++ {
+			if rows[i][name] == value {
+				results = append(results, rows[i])
+			} else {
+				break
+			}
+		}
+	}
+	return results
+}
+
+func naiveSearch(rows []map[string]interface{}, query Query) [] map[string]interface{} {
 	filteredRows := [] map[string]interface{}{}
+
 	for _, row := range rows {
 		if (query.LimitSize != 0 && len(filteredRows) > query.LimitSize) {
 			break

@@ -9,7 +9,8 @@ import (
 )
 
 type EventCache []map[string]interface{}
-type Cache map[string]EventCache
+type Indices map[string]EventCache
+type Cache map[string]Indices
 type Caches map[string]Cache
 
 func LoadAllCaches(directoryPath string) Caches {
@@ -37,12 +38,12 @@ func LoadCache(fileName string) Cache{
 		log.Fatal(err)
 	}
 
-	var cache Cache 
+	var cache map[string]EventCache
 	json.Unmarshal(bytes, &cache)
 	for _, eventCache := range cache {
 		ReverseSlice(eventCache)
 	}
-	return cache;
+	return SortByIndices(cache);
 }
 
 func ReverseSlice(s EventCache) EventCache {

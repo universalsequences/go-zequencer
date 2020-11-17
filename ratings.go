@@ -56,7 +56,7 @@ func LoadRatings(caches Caches) RatingCache {
 	count := make(map[string]int)
 	cache := make(RatingCache)
 
-	rows := caches[xanaduContract][event]
+	rows := caches[xanaduContract][event]["blockNumber"]
 	for _, row := range rows {
 		if (row["annotationType"].(string) == annotationType) {
 			rating, _ := strconv.Atoi(row["annotationData"].(string))

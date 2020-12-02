@@ -75,6 +75,8 @@ func runSamplesStreamQuery(
 	}
 
 	projectCount := getProjectCountForSamples(caches, sounds)
+	blockNumbers := getBlockNumbers(caches, sounds)
+	minBlock := getMinBlock(blockNumbers)
 
 	// now sort by rating
 	ratedSounds := []RatedSound{}
@@ -85,11 +87,13 @@ func runSamplesStreamQuery(
 			count = val
 		}
 
+		blockNumber := blockNumbers[id] - minBlock
+
 		ratedSounds = append(
 			ratedSounds,
 			RatedSound{
 				Id: id,
-				Rating: math.Pow((float64((1.0 + (*ratingsCache)[id])) / 5.0), 2) * float64(count),
+				Rating: math.Sqrt(blockNumber) + math.Pow((float64((1.0 + (*ratingsCache)[id])) / 5.0), 2) * math.Sqrt(float64(count)),
 			})
 	}
 	sort.Sort(ByRating(ratedSounds))
@@ -147,6 +151,35 @@ func getSamplesWithAndTags(caches *Caches, tags []string) []string {
 		}
 	}
 	return samples
+}
+
+func getMinBlock(blockNumbers map[string]float64) float64{
+	min := 10000000.0
+	for _, blockNumber := range blockNumbers {
+		if (blockNumber < min) {
+			min = blockNumber
+		}
+	}
+	return min
+}
+
+func getBlockNumbers(caches *Caches, ids []string) map[string]float64 {
+	idsToFilter := []interface{}{}
+	for _, id := range ids {
+		idsToFilter = append(idsToFilter, id);
+	}
+
+	query := NewQuery(GUILD_SAMPLES)
+	query.From(SampleCreated)
+	query.Select("ipfsHash")
+	query.WhereIn("ipfsHash", idsToFilter)
+
+	results := query.ExecuteQuery(caches)
+	blockMap := map[string]float64{}
+	for _, result := range results {
+		blockMap[result["ipfsHash"].(string)] = result["blockNumber"].(float64);
+	}
+	return blockMap
 }
 
 func getSamplesWithOrTags(caches *Caches, tags []string) []string {

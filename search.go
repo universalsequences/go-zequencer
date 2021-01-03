@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"math"
+	"sort"
 	"log"
 	"net/http"
 	"strings"
@@ -15,7 +16,9 @@ const blocksPerDay = 6275
 
 type SearchQuery struct {
 	SearchTerm string `json:"searchTerm"`
-	GuildId float64 `json:"guildId"`
+	GuildIds []float64 `json:"guildIds"`
+	GroupBy string `json:"groupBy"`
+	Year float64 `json:"year"`
 }
 
 type QueryResults struct {
@@ -49,6 +52,7 @@ type BlockResults struct {
 	Discogs map[string][]SampleResult `json:"discogs"`
 	BlockNumber float64 `json:"blockNumber"`
 	Results []SampleResult `json:"results"`
+	Tag string `json:"tag"`
 }
 
 func HandleSearchQuery(
@@ -87,7 +91,7 @@ func prePopulateCache(caches *Caches, ratingsCache *RatingCache, cachedQueries *
 }
 
 func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []BlockResults {
-	recentSounds := getRecentSounds(caches, query.SearchTerm, query.GuildId)
+	recentSounds := getRecentSounds(caches, query.SearchTerm, query.GuildIds, query.Year)
 	recentDiscogs := getRecentDiscogs(caches, recentSounds)
 	recentReleases := getRecentReleases(caches, recentDiscogs)
 	recentYoutubes := getRecentYoutubeSamples(caches, recentSounds)
@@ -95,8 +99,11 @@ func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []Bl
 	ratings := getRatings(ratingsCache, getSampleIds(recentSounds))
 	// usedIn := getUsedIn(caches, recentSounds);
 	sounds := combineAll(recentSounds, recentDiscogs, recentYoutubes, recentTags, ratings, recentReleases);
-	byDay := getByDay(sounds);
-	return partitionBySource(byDay, query.SearchTerm);
+	if (query.GroupBy == "tag") {
+		return partitionBySource(getByTag(sounds), query.SearchTerm);
+	} else {
+		return partitionBySource(getByDay(sounds), query.SearchTerm);
+	}
 }
 
 func getSampleIds(recentSounds []SampleResult) []string {
@@ -155,6 +162,38 @@ type TempBlock struct {
 	Results *[]SampleResult
 };
 
+func getByTag(results []SampleResult) []BlockResults {
+	tagToResults := map[string][]SampleResult{}
+	for _, result := range results {
+		for _, tag := range result.Tags {
+			trimmed := strings.TrimSpace(tag)
+			tagToResults[trimmed] = append(
+				tagToResults[trimmed], result)
+		}
+	}
+
+	blockResults := []BlockResults{}
+	for tag, results := range tagToResults {
+		blockResults = append(
+			blockResults,
+			BlockResults{
+				Tag: tag,
+				Results: results,
+			})
+	}
+
+	sort.Sort(ByTag(blockResults))
+
+	return blockResults
+}
+
+type ByTag []BlockResults
+func (a ByTag) Len() int           { return len(a) }
+func (a ByTag) Less(i, j int) bool { return strings.Compare(strings.ToLower(a[i].Tag),strings.ToLower(a[j].Tag)) < 0 }
+func (a ByTag) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+
+
+
 func getByDay(results []SampleResult) []BlockResults{
 	// first try to find blocks that are within a certain range
 	blocks := []*TempBlock{}
@@ -198,6 +237,7 @@ func partitionBySource(byDay [] BlockResults, searchTerm string) []BlockResults 
 		results := toPartition.Results;
 		dayResult := BlockResults{
 			BlockNumber: toPartition.BlockNumber,
+			Tag: toPartition.Tag,
 			Results: toPartition.Results,
 			Discogs: map[string][]SampleResult{},
 			Youtube: map[string][]SampleResult{},

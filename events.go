@@ -3,6 +3,7 @@ package main
 const SampleCreated = "SampleCreated(address,bytes32,string,uint32)"
 const SampleTagged = "SampleTagged(bytes32,bytes32,uint32)"
 const SampleYoutube = "SampledYoutube(bytes32,bytes32,uint32)"
+const SampleYear = "SampleYear(bytes32,int16,uint32)"
 const NewDiscogsSample = "NewDiscogsSample(bytes32,uint256,bytes32,uint32)"
 const ReleaseInfo = "ReleaseInfo(bytes32,uint32,string,bytes32,bytes32)"
 const Sample = "ReleaseInfo(bytes32,uint32,string,bytes32,bytes32)"
@@ -21,6 +22,7 @@ const EncryptedContentShared = "EncryptedContentShared(address,address,bytes32,b
 var TableIndices = map[string][]string {
 	SampleCreated: []string{"guildId", "ipfsHash"},
 	SampleTagged: []string{"tag", "ipfsHash"},
+	SampleYear: []string{"year", "ipfsHash"},
 	SampleYoutube: []string{"videoId", "ipfsHash"},
 	NewDiscogsSample: []string{"sampleHash", "discogsId"},
 	ReleaseInfo: []string{"artistName", "releaseId"},

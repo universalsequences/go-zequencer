@@ -5,7 +5,7 @@ import (
 	"sort"
 )
 
-func getRecentSounds(caches *Caches, searchTerm string, guildId float64) []SampleResult {
+func getRecentSounds(caches *Caches, searchTerm string, guildIds []float64, year float64) []SampleResult {
 	filterByTitle := false
 	soundIds := []interface{}{}
 
@@ -18,11 +18,19 @@ func getRecentSounds(caches *Caches, searchTerm string, guildId float64) []Sampl
 			soundIds = getSoundsWithOrTags(caches, matchingTags)
 		}
 	}
+	if (year != 0) {
+		soundIds = getSoundsWithYear(caches, year);
+	}
+
+	guildList := []interface{}{}
+	for _, guildId := range guildIds {
+		guildList = append(guildList, guildId);
+	}
 
 	whereClauses := []WhereClause{
 			WhereClause{
 				Name: "guildId",
-				Value: guildId,
+				ValueList: guildList,
 			}}
 	if (len(soundIds) > 0) {
 		whereClauses = append(
@@ -98,3 +106,27 @@ func findMatchingTags(caches *Caches, searchTerm string) []interface{} {
 	return tags
 }
 
+func getSoundsWithYear(caches *Caches, year float64) []interface{}{
+	query := Query{
+		Address: GUILD_SAMPLES,
+		EventLog: SampleYear,
+		SelectStatements: []string{
+			"ipfsHash",
+		},
+		WhereClauses: []WhereClause{
+			WhereClause{
+				Name: "year",
+				Value: year,
+			}},
+		FromBlockNumber: 1,
+	};
+
+	cache := (*caches)[GUILD_SAMPLES] 
+	results := queryForCache(cache, query)
+
+	ids := []interface{}{}
+	for _, result := range results {
+		ids = append(ids, result["ipfsHash"])
+	}
+	return ids
+}

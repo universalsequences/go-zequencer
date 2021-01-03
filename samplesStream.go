@@ -93,7 +93,7 @@ func runSamplesStreamQuery(
 			ratedSounds,
 			RatedSound{
 				Id: id,
-				Rating: math.Sqrt(blockNumber) + math.Pow((float64((1.0 + (*ratingsCache)[id])) / 5.0), 2) * math.Sqrt(float64(count)),
+				Rating: math.Pow(blockNumber, 1.0/4.0) + math.Pow((float64((1.0 + (*ratingsCache)[id])) / 5.0), 2) * math.Sqrt(float64(count)),
 			})
 	}
 	sort.Sort(ByRating(ratedSounds))

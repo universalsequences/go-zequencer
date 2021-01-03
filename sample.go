@@ -98,8 +98,12 @@ func HandleSampleQuery(
 	}
 
 	if (len(coverArtResults) >= 1) {
-		sampleData.CoverArtHash = coverArtResults[0]["coverArtHash"].(string);
-		sampleData.DiscogsId = coverArtResults[0]["discogsId"].(float64);
+		if (coverArtResults[0]["coverArtHash"] != nil) {
+			sampleData.CoverArtHash = coverArtResults[0]["coverArtHash"].(string);
+		}
+		if (coverArtResults[0]["discogsId"] != nil) {
+			sampleData.DiscogsId = coverArtResults[0]["discogsId"].(float64);
+		}
 	}
 
 	bytes, err := json.Marshal(sampleData)

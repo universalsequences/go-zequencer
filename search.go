@@ -14,11 +14,14 @@ import (
 const blocksPerDay = 6275
 //const blocksPerDay = 6275*31;
 
+const pageSize = 30;
+
 type SearchQuery struct {
 	SearchTerm string `json:"searchTerm"`
 	GuildIds []float64 `json:"guildIds"`
 	GroupBy string `json:"groupBy"`
 	Year float64 `json:"year"`
+	Start float64 `json:"start"`
 }
 
 type QueryResults struct {
@@ -99,10 +102,16 @@ func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []Bl
 	ratings := getRatings(ratingsCache, getSampleIds(recentSounds))
 	// usedIn := getUsedIn(caches, recentSounds);
 	sounds := combineAll(recentSounds, recentDiscogs, recentYoutubes, recentTags, ratings, recentReleases);
+	var results []BlockResults
 	if (query.GroupBy == "tag") {
-		return partitionBySource(getByTag(sounds), query.SearchTerm);
+		results = partitionBySource(getByTag(sounds), query.SearchTerm)
 	} else {
-		return partitionBySource(getByDay(sounds), query.SearchTerm);
+		results = partitionBySource(getByDay(sounds), query.SearchTerm)
+	}
+	if (int(query.Start) + pageSize > len(results)) {
+		return results[int64(query.Start):len(results)]
+	} else {
+		return results[int64(query.Start):int64(query.Start+pageSize)]
 	}
 }
 

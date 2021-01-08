@@ -63,7 +63,7 @@ func HandleSearchQuery(
 	r *http.Request,
 	caches *Caches,
 	ratingsCache *RatingCache,
-	cachedQueries *CachedQueries) {
+	cachedQueries *CachedSearchQueries) {
 	defer r.Body.Close()
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -72,25 +72,46 @@ func HandleSearchQuery(
 	w.Header().Set("Content-Type", "application/json")
 
 	bodyString := string(bodyBytes)
+	query := SearchQuery{}
+	json.Unmarshal([]byte(bodyString), &query)
+	start := query.Start
+	query.Start = 0
 
-	if val, ok := cachedQueries.getQuery(bodyString); ok {
-		w.Write(val)
+	// unpaginated queryr
+	unpaginatedQueryBytes, _ := json.Marshal(query)
+	unpaginatedQueryString := string(unpaginatedQueryBytes)
+
+	if unpaginatedResults, ok := cachedQueries.getQuery(unpaginatedQueryString); ok {
+		ret, _ := json.Marshal(paginate(start, unpaginatedResults))
+		w.Write(ret)
 		return
 	}
 
-	query := SearchQuery{}
-	json.Unmarshal([]byte(bodyString), &query)
-	bytes, err := json.Marshal(runQuery(caches, ratingsCache, query))
-	cachedQueries.newQuery(bodyString, bytes)
-	w.Write(bytes)
+	unpaginatedResults := runQuery(caches, ratingsCache, query)
+	
+	cachedQueries.newQuery(unpaginatedQueryString, unpaginatedResults)
+
+	paginatedResults := paginate(start, unpaginatedResults)
+	ret, _ := json.Marshal(paginatedResults)
+	w.Write(ret)
 }
 
-func prePopulateCache(caches *Caches, ratingsCache *RatingCache, cachedQueries *CachedQueries) {
+func prePopulateCache(caches *Caches, ratingsCache *RatingCache, cachedQueries *CachedSearchQueries) {
 	bodyString := "{\"searchTerm\":\"\",\"guildId\":0}"
 	query := SearchQuery{}
-	bytes, _ := json.Marshal(runQuery(caches, ratingsCache, query))
-	cachedQueries.newQuery(bodyString, bytes)
+	cachedQueries.newQuery(bodyString, runQuery(caches, ratingsCache, query))
 	fmt.Println("Finished pre-populating cache")
+}
+
+func paginate(start float64, results [] BlockResults) []BlockResults {
+	if (int(start) >= len(results)) {
+		return []BlockResults{}
+	}
+	if (int(start) + pageSize > len(results)) {
+		return results[int64(start):len(results)]
+	} else {
+		return results[int64(start):int64(start+pageSize)]
+	}
 }
 
 func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []BlockResults {
@@ -108,11 +129,7 @@ func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []Bl
 	} else {
 		results = partitionBySource(getByDay(sounds), query.SearchTerm)
 	}
-	if (int(query.Start) + pageSize > len(results)) {
-		return results[int64(query.Start):len(results)]
-	} else {
-		return results[int64(query.Start):int64(query.Start+pageSize)]
-	}
+	return results;
 }
 
 func getSampleIds(recentSounds []SampleResult) []string {

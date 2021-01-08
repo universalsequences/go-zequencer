@@ -11,7 +11,7 @@ func main() {
 	directoryPath := os.Args[1]
 	caches := LoadAllCaches(directoryPath)
 	cachedQueries := CachedQueries{Queries: make(map[string]CachedQuery), Queue: list.New()}
-	searchCachedQueries := CachedQueries{Queries: make(map[string]CachedQuery), Queue: list.New()}
+	searchCachedQueries := CachedSearchQueries{Queries: make(map[string]CachedSearchQuery), Queue: list.New()}
 	projectsCachedQueries := CachedQueries{Queries: make(map[string]CachedQuery), Queue: list.New()}
 	streamCachedQueries := CachedQueries{Queries: make(map[string]CachedQuery), Queue: list.New()}
 	ratings := LoadRatings(caches)

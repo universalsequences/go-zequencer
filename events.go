@@ -17,6 +17,7 @@ const GuildKeyEncrypted = "GuildKeyEncrypted(address,uint32,bytes32)"
 const NewEncryptedContent = "NewEncryptedContent(address,bytes32,bytes32,int8,bytes32,bytes32[9],bytes32[6])"
 const NewGuildMemberRequestAccepted  = "NewGuildMemberRequestAccepted(address,uint32)"
 const EncryptedContentShared = "EncryptedContentShared(address,address,bytes32,bytes32[9],bytes32[6])"
+const NewGuildSequence = "NewGuildSequence(address,bytes32,uint32,bytes32,bytes32,bytes32[9],bytes32[6])"
     
 // have max 2 keys to index on - so that they can do sub-sorting based on the other key
 var TableIndices = map[string][]string {
@@ -36,4 +37,5 @@ var TableIndices = map[string][]string {
 	NewEncryptedContent: []string{"newContent","blockNumber"},
 	NewGuildMemberRequestAccepted: []string{"newMember", "guildId"},
 	EncryptedContentShared: []string{"contentHash", "sharedWith"},
+	NewGuildSequence: []string{"contentHash", "guildId"},
 }

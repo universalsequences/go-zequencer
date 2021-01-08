@@ -18,7 +18,7 @@ func HandleReloadRequest(
 	directoryPath string,
 	caches *Caches,
 	ratingsCache *RatingCache,
-	searchCachedQueries *CachedQueries,
+	searchCachedQueries *CachedSearchQueries,
 	projectsCachedQueries *CachedQueries,
 	cachedQueries *CachedQueries,
 	streamCachedQueries *CachedQueries,

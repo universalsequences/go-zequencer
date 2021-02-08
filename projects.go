@@ -13,6 +13,9 @@ const TOKENIZED_SEQUENCES = "0x606f760c228cd5f11c6f79de64d3b299b11f1ed1"
 type ProjectsQuery struct {
 	SearchTerm string `json:"searchTerm"`
 	User       string `json:"user"`
+	Starred bool `json:"starred"`
+	Favorited bool `json:"favorited"`
+	FilterMine bool `json:"filterMine"`
 }
 
 type Project struct {
@@ -61,16 +64,43 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 	queryBuilder.Select("title")
 	queryBuilder.Select("user")
 
-	if (query.User != "") {
-		fmt.Printf("Filtering by user=%s\n", query.User)
+	if (query.FilterMine) {
 		queryBuilder.WhereIs("user", query.User)
 	}
 
 	results := queryBuilder.ExecuteQuery(caches)
-	return collapseProjects(convertToProjects(results))
+
+	filtered := []map[string]interface{}{}
+	starred := GetStarredProjects(caches)
+	favorited := GetFavoritedProjects(caches, query.User)
+
+	for _, result := range results {
+		id := result["newSequence"].(string)
+		if (query.Favorited && query.Starred) {
+			if _, ok := starred[id]; !ok {
+				if _, ok2 := favorited[id]; !ok2 {
+					continue
+				}
+			}
+		} else if (query.Favorited) {
+				if _, ok := favorited[id]; !ok {
+					continue
+				}
+		} else if (query.Starred) {
+				if _, ok := starred[id]; !ok {
+					continue
+				}
+		}
+		filtered = append(
+			filtered,
+			result)
+	}
+
+	return collapseProjects(convertToProjects(filtered))
 }
 
-func convertToProjects(results []map[string]interface{}) []Project {
+func convertToProjects(
+	results []map[string]interface{}) []Project {
 	projects := []Project{}
 	for _, result := range results {
 		previousSequence, ok := result["previousSequence"].(string)
@@ -78,12 +108,13 @@ func convertToProjects(results []map[string]interface{}) []Project {
 			previousSequence = ""
 		}
 
+		id := result["newSequence"].(string)
 
 		projects = append(
 			projects,
 			Project{
 				User: result["user"].(string),
-				NewSequence: result["newSequence"].(string),
+				NewSequence: id,
 				PreviousSequence: previousSequence,
 				Title: result["title"].(string),
 				BlockNumber: result["blockNumber"].(float64),

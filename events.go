@@ -18,6 +18,10 @@ const NewEncryptedContent = "NewEncryptedContent(address,bytes32,bytes32,int8,by
 const NewGuildMemberRequestAccepted  = "NewGuildMemberRequestAccepted(address,uint32)"
 const EncryptedContentShared = "EncryptedContentShared(address,address,bytes32,bytes32[9],bytes32[6])"
 const NewGuildSequence = "NewGuildSequence(address,bytes32,uint32,bytes32,bytes32,bytes32[9],bytes32[6])"
+const SequenceStarred = "SequenceStarred(bytes32,address,uint32)"
+const SequenceUnstarred = "SequenceUnstarred(bytes32,address,uint32)"
+const SequenceFavorited = "SequenceFavorited(bytes32,address,uint32)"
+const SequenceUnfavorited = "SequenceUnfavorited(bytes32,address,uint32)"
     
 // have max 2 keys to index on - so that they can do sub-sorting based on the other key
 var TableIndices = map[string][]string {
@@ -38,4 +42,8 @@ var TableIndices = map[string][]string {
 	NewGuildMemberRequestAccepted: []string{"newMember", "guildId"},
 	EncryptedContentShared: []string{"contentHash", "sharedWith"},
 	NewGuildSequence: []string{"contentHash", "guildId"},
+	SequenceStarred: []string{"ipfsHash", "guildId"},
+	SequenceUnstarred: []string{"ipfsHash",  "guildId"},
+	SequenceFavorited: []string{"ipfsHash", "user", "guildId"},
+	SequenceUnfavorited: []string{"ipfsHash", "user", "guildId"},
 }

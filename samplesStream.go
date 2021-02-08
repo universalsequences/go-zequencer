@@ -75,6 +75,7 @@ func runSamplesStreamQuery(
 	}
 
 	projectCount := getProjectCountForSamples(caches, sounds)
+	resampledSounds := getResampledSamples(caches, sounds)
 	blockNumbers := getBlockNumbers(caches, sounds)
 	minBlock := getMinBlock(blockNumbers)
 
@@ -88,12 +89,20 @@ func runSamplesStreamQuery(
 		}
 
 		blockNumber := blockNumbers[id] - minBlock
+		adjustedBlock := math.Pow(blockNumber, 1.0/64.0);
+
+		rating := adjustedBlock +
+			math.Pow((float64((1.0 + (*ratingsCache)[id])) / 5.0), 2) * math.Sqrt(float64(count))
+
+		if _, ok := resampledSounds[id]; ok {
+			rating = math.Pow(rating, 1 / 4.0)
+		}
 
 		ratedSounds = append(
 			ratedSounds,
 			RatedSound{
 				Id: id,
-				Rating: math.Pow(blockNumber, 1.0/4.0) + math.Pow((float64((1.0 + (*ratingsCache)[id])) / 5.0), 2) * math.Sqrt(float64(count)),
+				Rating: rating,
 			})
 	}
 	sort.Sort(ByRating(ratedSounds))
@@ -216,6 +225,26 @@ type ByRating []RatedSound
 func (a ByRating) Len() int           { return len(a) }
 func (a ByRating) Less(i, j int) bool { return a[i].Rating > a[j].Rating }
 func (a ByRating) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+
+func getResampledSamples(caches *Caches, ids []string) map[string]bool {
+	idsToFilter := []interface{}{}
+	for _, id := range ids {
+		idsToFilter = append(idsToFilter, id);
+	}
+
+	query := NewQuery(GUILD_SAMPLES)
+	query.From(SampleTagged)
+	query.Select("ipfsHash")
+	query.WhereIs("tag", "Resampled")
+	query.WhereIn("ipfsHash", idsToFilter)
+
+	results := query.ExecuteQuery(caches)
+	blockMap := map[string]bool{}
+	for _, result := range results {
+		blockMap[result["ipfsHash"].(string)] = true
+	}
+	return blockMap
+}
 
 func getProjectCountForSamples(caches *Caches, ids []string) map[string]int{
 	query := NewQuery(TOKENIZED_SEQUENCES)

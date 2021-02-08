@@ -72,11 +72,9 @@ func queryForCache(cache Cache, query Query) [] map[string]interface{} {
 		}
 	}
 	if (empty) {
-		for _, values := range cache[query.EventLog] {
-			for _, value := range values {
+		values := cache[query.EventLog]["blockNumber"]
+		for _, value := range values {
 				results = append(results, value)
-			}
-			break
 		}
 	}
 	// sort by block number

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -16,6 +17,7 @@ type ProjectsQuery struct {
 	Starred bool `json:"starred"`
 	Favorited bool `json:"favorited"`
 	FilterMine bool `json:"filterMine"`
+	SearchTag string`json:"searchTag"`
 }
 
 type Project struct {
@@ -73,6 +75,7 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 	filtered := []map[string]interface{}{}
 	starred := GetStarredProjects(caches)
 	favorited := GetFavoritedProjects(caches, query.User)
+	projectTags := GetProjectTags(caches)
 
 	for _, result := range results {
 		id := result["newSequence"].(string)
@@ -91,6 +94,38 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 					continue
 				}
 		}
+
+		matchedTag := false
+		if (query.SearchTag != "") {
+			if tags, ok := projectTags[id]; ok {
+				for _, tag := range tags {
+					if (strings.Contains(strings.ToLower(tag), strings.ToLower(query.SearchTag))) {
+						matchedTag = true
+					}
+				}
+			}
+			if (query.SearchTerm == "" && !matchedTag) {
+				continue
+			}
+		} else {
+			matchedTag = true
+		}
+
+		if (query.SearchTerm != "") {
+			matchedTag = false
+			if tags, ok := projectTags[id]; ok {
+				for _, tag := range tags {
+					if (strings.Contains(strings.ToLower(tag), strings.ToLower(query.SearchTerm))) {
+						matchedTag = true
+					}
+				}
+			}
+
+			if (!matchedTag && !strings.Contains(strings.ToLower(result["title"].(string)), strings.ToLower(query.SearchTerm))) {
+				continue;
+			}
+		}
+
 		filtered = append(
 			filtered,
 			result)

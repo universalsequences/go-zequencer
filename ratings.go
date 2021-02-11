@@ -87,3 +87,23 @@ func getRatings(cache *RatingCache, ids []string) map[string]int {
 	}
 	return ratings
 }
+
+func getSoundsWithRating(caches *Caches, rating int) map[string]bool {
+	query := NewQuery(XANADU)
+	query.From(event)
+	query.Select("data")
+	query.Select("annotationData")
+	query.WhereIs("annotationType", "SAMPLE_RATED")
+	query.WhereIs("annotationData", "5")
+
+	cache := (*caches)[XANADU] 
+	results := queryForCache(cache, query)
+
+	ids := map[string]bool{}
+	for _, result := range results {
+		ids[result["data"].(string)] = true
+	}
+
+	return ids
+}
+

@@ -1,6 +1,38 @@
 package main
 
 const SEQUENCE_METADATA = "0x03172e863dbF7EEb3994AF5a6608c470eB6E79fC"
+const XANADU = "0x305306F68D9C230B59d5B6869AEd1723365C9290"
+
+
+func GetProjectTags(caches *Caches) map[string][]string {
+	projectTags := map[string][]string{}
+	query := NewQuery(XANADU)
+	query.From(NewAnnotation)
+	query.Select("data") // ipfs hash of project
+	query.Select("annotationData") // the tag
+	query.WhereIs("annotationType", SEQUENCE_TAG)
+	results := query.ExecuteQuery(caches)
+
+	for _, result := range results {
+		if _, ok := result["annotationData"].(string); !ok {
+			continue;
+		}
+		tag := result["annotationData"].(string)
+		projectHash := result["data"].(string)
+		if _, ok := projectTags[projectHash]; !ok {
+			projectTags[projectHash] = []string{
+				tag,
+			}
+		} else {
+			projectTags[projectHash] = append(
+				projectTags[projectHash],
+				tag,
+			)
+		}
+	}
+
+	return projectTags
+}
 
 func GetStarredProjects(caches *Caches) map[string]bool {
 	starredQuery := NewQuery(SEQUENCE_METADATA)

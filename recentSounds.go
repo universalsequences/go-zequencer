@@ -5,7 +5,12 @@ import (
 	"sort"
 )
 
-func getRecentSounds(caches *Caches, searchTerm string, guildIds []float64, year float64) []SampleResult {
+func getRecentSounds(
+	caches *Caches,
+	searchTerm string,
+	guildIds []float64,
+	year float64,
+	filterFavorites bool) []SampleResult {
 	filterByTitle := false
 	soundIds := []interface{}{}
 
@@ -22,35 +27,35 @@ func getRecentSounds(caches *Caches, searchTerm string, guildIds []float64, year
 		soundIds = getSoundsWithYear(caches, year);
 	}
 
+	if (filterFavorites) {
+		favoritedSounds := getSoundsWithRating(caches, 5)
+		if (len(soundIds) == 0) {
+			for id, _ := range favoritedSounds {
+				soundIds = append(
+					soundIds,
+					id)
+			}
+		} else {
+		}
+	}
+
 	guildList := []interface{}{}
 	for _, guildId := range guildIds {
 		guildList = append(guildList, guildId);
 	}
 
-	whereClauses := []WhereClause{
-			WhereClause{
-				Name: "guildId",
-				ValueList: guildList,
-			}}
-	if (len(soundIds) > 0) {
-		whereClauses = append(
-			whereClauses,
-			WhereClause{
-				Name: "ipfsHash",
-				ValueList: soundIds,
-			})
+	query := NewQuery(GUILD_SAMPLES)
+	query.From(SampleCreated)
+	query.Select("ipfsHash")
+	query.Select("user")
+	query.Select("title")
+	if (!filterFavorites) {
+		query.WhereIn("guildId", guildList)
 	}
-	query := Query{
-		Address: GUILD_SAMPLES,
-		EventLog: SampleCreated,
-		SelectStatements: []string{
-			"ipfsHash",
-			"user",
-			"title",
-		},
-		WhereClauses: whereClauses,
-		FromBlockNumber: 1,
-	};
+
+	if (len(soundIds) > 0) {
+		query.WhereIn("ipfsHash",soundIds)
+	}
 
 	cache := (*caches)[GUILD_SAMPLES] 
 	results := queryForCache(cache, query)

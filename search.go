@@ -22,6 +22,7 @@ type SearchQuery struct {
 	GroupBy string `json:"groupBy"`
 	Year float64 `json:"year"`
 	Start float64 `json:"start"`
+	FilterFavorites bool `json:"filterFavorites"`
 }
 
 type QueryResults struct {
@@ -115,7 +116,12 @@ func paginate(start float64, results [] BlockResults) []BlockResults {
 }
 
 func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []BlockResults {
-	recentSounds := getRecentSounds(caches, query.SearchTerm, query.GuildIds, query.Year)
+	recentSounds := getRecentSounds(
+		caches,
+		query.SearchTerm,
+		query.GuildIds,
+		query.Year,
+		query.FilterFavorites)
 	recentDiscogs := getRecentDiscogs(caches, recentSounds)
 	recentReleases := getRecentReleases(caches, recentDiscogs)
 	recentYoutubes := getRecentYoutubeSamples(caches, recentSounds)

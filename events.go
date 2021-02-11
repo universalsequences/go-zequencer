@@ -22,6 +22,7 @@ const SequenceStarred = "SequenceStarred(bytes32,address,uint32)"
 const SequenceUnstarred = "SequenceUnstarred(bytes32,address,uint32)"
 const SequenceFavorited = "SequenceFavorited(bytes32,address,uint32)"
 const SequenceUnfavorited = "SequenceUnfavorited(bytes32,address,uint32)"
+const NewAnnotation = "NewAnnotation(bytes32,bytes32,bytes32,address)"
     
 // have max 2 keys to index on - so that they can do sub-sorting based on the other key
 var TableIndices = map[string][]string {
@@ -46,4 +47,5 @@ var TableIndices = map[string][]string {
 	SequenceUnstarred: []string{"ipfsHash",  "guildId"},
 	SequenceFavorited: []string{"ipfsHash", "user", "guildId"},
 	SequenceUnfavorited: []string{"ipfsHash", "user", "guildId"},
+	NewAnnotation: []string{"annotationData", "annotationType", "data"},
 }

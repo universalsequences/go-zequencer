@@ -8,6 +8,7 @@ type Query struct {
 	FromBlockNumber float64 `json:"fromBlockNumber"`
 	ToBlockNumber float64 `json:"toBlockNumber"`
 	WhereClauses []WhereClause `json:"whereClauses"`
+	Debug bool
 }
 
 type WhereClause struct {

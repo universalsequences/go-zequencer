@@ -17,8 +17,10 @@ func SortByIndices(cache map[string]EventCache) Cache {
 			for i, key := range keys {
 				if i == 0 { 
 					indices[key] = SortByKey(eventCache, key, keys[1])
-				} else {
+				} else if i == 1 {
 					indices[key] = SortByKey(eventCache, key, keys[0])
+				} else {
+					indices[key] = SortByKey(eventCache, key, keys[1])
 				}
 			}
 		} 
@@ -45,7 +47,10 @@ func SortByKey(cache EventCache, key string, secondaryKey string) EventCache {
 		secondaryLess := 0.0
 		if _, ok := sorted[i][key].(string); ok {
 			if _, ok := sorted[j][key].(string); ok {
-				primaryLess = float64(strings.Compare(sorted[i][key].(string), sorted[j][key].(string)))
+				primaryLess = float64(
+					strings.Compare(
+						sorted[i][key].(string),
+						sorted[j][key].(string)))
 			}
 		} else if _, ok := sorted[i][key].(float64); ok {
 			if _, ok := sorted[j][key].(float64); ok {
@@ -55,7 +60,10 @@ func SortByKey(cache EventCache, key string, secondaryKey string) EventCache {
 
 		if _, ok := sorted[i][secondaryKey].(string); ok {
 			if _, ok := sorted[j][secondaryKey].(string); ok {
-				secondaryLess = float64(strings.Compare(sorted[i][secondaryKey].(string), sorted[j][secondaryKey].(string)))
+				secondaryLess = float64(
+					strings.Compare(
+						sorted[i][secondaryKey].(string),
+						sorted[j][secondaryKey].(string)))
 			}
 		} else if _, ok := sorted[i][secondaryKey].(float64); ok {
 			if _, ok := sorted[j][secondaryKey].(float64); ok {

@@ -41,7 +41,7 @@ func HandleReloadRequest(
 		(*caches)[contract] = LoadCache(directoryPath + contract + ".json")
 		if (contract == TOKENIZED_SEQUENCES) {
 			projectsCachedQueries.Clear()
-		} else if (contract == GUILD_SAMPLES) {
+		} else if (contract == GUILD_SAMPLES || contract == ARTISTS_CONTRACT) {
 			streamCachedQueries.Clear()
 			searchCachedQueries.Clear()
 			prePopulateCache(caches, ratingsCache, searchCachedQueries)

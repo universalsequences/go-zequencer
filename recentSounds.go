@@ -49,6 +49,8 @@ func getRecentSounds(
 	query.Select("ipfsHash")
 	query.Select("user")
 	query.Select("title")
+
+	
 	if (!filterFavorites) {
 		query.WhereIn("guildId", guildList)
 	}
@@ -70,9 +72,11 @@ func getRecentSounds(
 					result)
 			}
 		}
-		return convertResults(filtered);
+		x := convertResults(filtered);
+		return x
 	}
-	return convertResults(results)
+	x := convertResults(results)
+	return x
 }
 
 func convertResults(results []map[string]interface{}) []SampleResult {
@@ -83,6 +87,7 @@ func convertResults(results []map[string]interface{}) []SampleResult {
 		converted.Title = result["title"].(string)
 		converted.BlockNumber = result["blockNumber"].(float64)
 		converted.IpfsHash = result["ipfsHash"].(string)
+		converted.User = result["user"].(string)
 		uniqueResults[converted.IpfsHash] = converted
 	}
 	convertedResults := []SampleResult{}

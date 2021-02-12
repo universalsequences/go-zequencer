@@ -1,5 +1,6 @@
 package main
 import (
+	"fmt"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -41,6 +42,9 @@ func queryForCache(cache Cache, query Query) [] map[string]interface{} {
 	results := [] map[string]interface{}{}
 	empty := true
 	for _, whereClause := range query.WhereClauses {
+		if (query.Debug) {
+			fmt.Printf("Where clause %v\n", whereClause)
+		}
 		// each of these where clauses get AND'd together
 
 		// for each of these where clauses we do a binary search giving us
@@ -68,7 +72,13 @@ func queryForCache(cache Cache, query Query) [] map[string]interface{} {
 				results = cache[query.EventLog]["blockNumber"]
 				empty = false
 			}
+			if (query.Debug) {
+				fmt.Println("Naive search");
+			}
 			results = naiveSearch(results, query)
+		}
+		if (query.Debug) {
+			fmt.Printf("Where clause results is now = %v\n", len(results))
 		}
 	}
 	if (empty) {

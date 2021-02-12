@@ -14,7 +14,7 @@ import (
 const blocksPerDay = 6275
 //const blocksPerDay = 6275*31;
 
-const pageSize = 30;
+const pageSize = 15;
 
 type SearchQuery struct {
 	SearchTerm string `json:"searchTerm"`
@@ -123,15 +123,16 @@ func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []Bl
 		query.Year,
 		query.FilterFavorites)
 	recentDiscogs := getRecentDiscogs(caches, recentSounds)
+	recentArtists := getRecentArtists(caches, recentSounds)
 	recentReleases := getRecentReleases(caches, recentDiscogs)
 	recentYoutubes := getRecentYoutubeSamples(caches, recentSounds)
 	recentTags := getRecentTags(caches, recentSounds)
 	ratings := getRatings(ratingsCache, getSampleIds(recentSounds))
 	// usedIn := getUsedIn(caches, recentSounds);
-	sounds := combineAll(recentSounds, recentDiscogs, recentYoutubes, recentTags, ratings, recentReleases);
+	sounds := combineAll(recentSounds, recentDiscogs, recentYoutubes, recentTags, ratings, recentReleases, recentArtists);
 	var results []BlockResults
 	if (query.GroupBy == "tag") {
-		results = partitionBySource(getByTag(sounds), query.SearchTerm)
+		results = partitionBySource(getByTag(sounds, query.SearchTerm), query.SearchTerm)
 	} else {
 		results = partitionBySource(getByDay(sounds), query.SearchTerm)
 	}
@@ -153,7 +154,8 @@ func combineAll(
 	sampleYoutube []SampleResult,
 	tags map[string][]string,
 	ratings map[string]int,
-	recentReleases map[string]Release) []SampleResult {
+	recentReleases map[string]Release,
+	recentArtists map[string]string) []SampleResult {
 
 	combined := map[string]*SampleResult{}
 
@@ -164,7 +166,12 @@ func combineAll(
 			BlockNumber: result.BlockNumber,
 			Tags: tags[result.IpfsHash],
 			Rating: ratings[result.IpfsHash],
+			User: result.User,
 		};
+	}
+
+	for ipfsHash, artistName := range recentArtists {
+		combined[ipfsHash].ArtistName = artistName
 	}
 
 	for ipfsHash, result := range recentReleases {
@@ -194,10 +201,13 @@ type TempBlock struct {
 	Results *[]SampleResult
 };
 
-func getByTag(results []SampleResult) []BlockResults {
+func getByTag(results []SampleResult, searchTerm string) []BlockResults {
 	tagToResults := map[string][]SampleResult{}
 	for _, result := range results {
 		for _, tag := range result.Tags {
+			if (len(result.Tags) > 1 && tag == searchTerm) {
+				continue
+			}
 			trimmed := strings.TrimSpace(tag)
 			tagToResults[trimmed] = append(
 				tagToResults[trimmed], result)
@@ -205,12 +215,31 @@ func getByTag(results []SampleResult) []BlockResults {
 	}
 
 	blockResults := []BlockResults{}
+	samplesProcessed := map[string]bool{}
 	for tag, results := range tagToResults {
+
+		if (strings.HasPrefix(tag, "0")) {
+			continue
+		}
+		resultsToProcess := []SampleResult{}
+		for _, result := range results {
+			if _, ok := samplesProcessed[result.IpfsHash]; ok {
+				continue
+			}
+			samplesProcessed[result.IpfsHash] = true
+			resultsToProcess = append(
+				resultsToProcess,
+				result)
+		}
+
+		if (len(resultsToProcess) == 0) {
+			continue
+		}
 		blockResults = append(
 			blockResults,
 			BlockResults{
 				Tag: tag,
-				Results: results,
+				Results: resultsToProcess,
 			})
 	}
 

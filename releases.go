@@ -23,6 +23,7 @@ func getRecentReleases(caches *Caches, recentDiscogs []SampleResult) map[string]
 	for _, result := range recentDiscogs {
 		results[result.IpfsHash] = releases[result.DiscogsId]
 	}
+
 	return results
 }
 
@@ -60,4 +61,23 @@ func getReleases(caches *Caches, discogsIds []interface{}) map[float64]Release {
 		ret[releaseId] = release
 	}
 	return ret
+}
+
+func getRecentArtists(caches *Caches, sounds []SampleResult) map[string]string {
+	ids := []interface{}{}
+	for _, row := range sounds {
+		ids = append(ids, row.IpfsHash)
+	}
+	query := NewQuery(ARTISTS_CONTRACT)
+	query.From(SampleByArtist)
+	query.Select("artistName")
+	query.Select("ipfsHash")
+	query.WhereIn("ipfsHash", ids)
+	results := queryForCache((*caches)[ARTISTS_CONTRACT], query)
+
+	artists := map[string]string{}
+	for _, result := range results {
+		artists[result["ipfsHash"].(string)] = result["artistName"].(string)
+	}
+	return artists
 }

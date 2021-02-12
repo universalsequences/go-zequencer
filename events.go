@@ -47,5 +47,5 @@ var TableIndices = map[string][]string {
 	SequenceUnstarred: []string{"ipfsHash",  "guildId"},
 	SequenceFavorited: []string{"ipfsHash", "user", "guildId"},
 	SequenceUnfavorited: []string{"ipfsHash", "user", "guildId"},
-	NewAnnotation: []string{"annotationData", "annotationType", "data"},
+	NewAnnotation: []string{"data", "annotationData", "annotationType"},
 }

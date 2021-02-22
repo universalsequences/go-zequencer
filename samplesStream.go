@@ -14,7 +14,7 @@ import (
 type SamplesStreamQuery struct {
 	AndTags []string `json:"andTags"`
 	OrTags []string `json:"orTags"`
-	GuildIds []int `json:"guildIds"`
+	GuildIds []float64 `json:"guildIds"`
 }
 
 type SamplesStreamResults struct {
@@ -69,9 +69,9 @@ func runSamplesStreamQuery(
 
 	sounds := []string{}
 	if (len(query.OrTags) == 0) {
-		sounds = getSamplesWithAndTags(caches, query.AndTags)
+		sounds = getSamplesWithAndTags(caches, query.AndTags, query.GuildIds)
 	} else {
-		sounds = getSamplesWithOrTags(caches, query.OrTags)
+		sounds = getSamplesWithOrTags(caches, query.OrTags, query.GuildIds)
 	}
 
 	projectCount := getProjectCountForSamples(caches, sounds)
@@ -123,12 +123,11 @@ func runSamplesStreamQuery(
 	}
 }
 
-func getSamplesWithAndTags(caches *Caches, tags []string) []string {
+func getSamplesWithAndTags(caches *Caches, tags []string, guildIds []float64) []string {
 	sampleMap := map[string]bool{}
 
 	for i, tag := range tags {
-		tagSamples := getSamplesWithOrTags(caches, []string{tag})
-
+		tagSamples := getSamplesWithOrTags(caches, []string{tag}, guildIds)
 		if i == 0 {
 			// on first go around we add to map
 			for _, sample := range tagSamples {
@@ -191,7 +190,7 @@ func getBlockNumbers(caches *Caches, ids []string) map[string]float64 {
 	return blockMap
 }
 
-func getSamplesWithOrTags(caches *Caches, tags []string) []string {
+func getSamplesWithOrTags(caches *Caches, tags []string, guildIds [] float64) []string {
 	tagsToFilter := []interface{}{}
 	for _, tag := range tags {
 		tagsToFilter = append(
@@ -199,11 +198,16 @@ func getSamplesWithOrTags(caches *Caches, tags []string) []string {
 			tag)
 	}
 
+	guildIdsToFilter := []interface{}{}
+	for _, guildId := range guildIds {
+		guildIdsToFilter = append(guildIdsToFilter, guildId)
+	}
+
 	query := NewQuery(GUILD_SAMPLES)
 	query.From(SampleTagged)
 	query.Select("ipfsHash")
 	query.WhereIn("tag", tagsToFilter)
-	query.WhereIs("guildId", 0.0)
+	query.WhereIn("guildId", guildIdsToFilter)
 
 	results := query.ExecuteQuery(caches)
 	soundMap := map[string]bool{}

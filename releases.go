@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -55,7 +56,7 @@ func getReleases(caches *Caches, discogsIds []interface{}) map[float64]Release {
 			ReleaseType: result["releaseType"].(string),
 			ReleaseId: result["releaseId"].(float64),
 			CoverArtHash: result["coverArtHash"].(string),
-			ReleaseName: strings.TrimPrefix(strings.TrimPrefix(result["releaseName"].(string), "RECORD"), "SAMPLE_PACK&"),
+			ReleaseName: strings.TrimPrefix(strings.TrimPrefix(result["releaseName"].(string), "RECORD"), "SAMPLE_PACK"),
 			ArtistName: result["artistName"].(string),
 		}
 		ret[releaseId] = release
@@ -80,4 +81,25 @@ func getRecentArtists(caches *Caches, sounds []SampleResult) map[string]string {
 		artists[result["ipfsHash"].(string)] = result["artistName"].(string)
 	}
 	return artists
+
 }
+
+func getSamplesFromRelease(caches *Caches, releaseId float64) []interface{} {
+	query := NewQuery(GUILD_SAMPLES)
+	query.From(NewDiscogsSample)
+	query.Select("sampleHash")
+	query.WhereIs("discogsId", releaseId)
+	results := queryForCache((*caches)[GUILD_SAMPLES], query)
+
+	soundIds := [] interface {}{}
+	for _, result := range results {
+		soundIds = append(
+			soundIds,
+			result["sampleHash"])
+	}
+
+	fmt.Printf("Getting samples from release %v\n", releaseId);
+	fmt.Println(soundIds);
+	return soundIds 
+}
+

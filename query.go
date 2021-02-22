@@ -39,48 +39,69 @@ func HandleQuery(
 }
 
 func queryForCache(cache Cache, query Query) [] map[string]interface{} {
-	results := [] map[string]interface{}{}
 	empty := true
+
+	// First the where clauses must be ordered by the index of this
+	// event type
+	sortWhereClausesByIndex(query)
+
+	names := [] string {}
 	for _, whereClause := range query.WhereClauses {
-		if (query.Debug) {
-			fmt.Printf("Where clause %v\n", whereClause)
-		}
-		// each of these where clauses get AND'd together
+		names = append(names, whereClause.Name)
+	}
+	if (query.Debug) {
+		fmt.Printf("event=%s where clauses %v\n", query.EventLog, names)
+	}
 
-		// for each of these where clauses we do a binary search giving us
-		// results matching that where clause
-
-		// for example: guildId = 1 AND tag = "breaks"
-		// this would need to do 2 searches and then do an intersectiono
-
-		// ideally though the indices would do sub-sorting so
-		// within the guildId = 0 the tags would be sorted by tags
-
-		// so once its gone through the first key, it'll search through the second
-
+	lastResults := map[string][] map[string]interface{}{}
+	
+	for _, whereClause := range query.WhereClauses {
 		valueList:= whereClause.ValueList
 		valueList = append(valueList, whereClause.Value)
+		currentResults := map[string][] map[string]interface{}{}
 		if _, ok := cache[query.EventLog][whereClause.Name]; ok {
-			// search by Name in the 
+			// this where clause is indexed
 			if (empty) {
-				results = cache[query.EventLog][whereClause.Name]
+				lastResults["first"] = cache[query.EventLog][whereClause.Name]
 				empty = false
 			}
-			results = searchByKey(results, whereClause.Name, valueList)
+			for _, valueResults := range lastResults {
+				if (query.Debug) {
+					fmt.Printf("Search by key for where.name=%v valueList=%v\n", whereClause.Name, valueList)
+				}
+				currentResults = searchByKey(valueResults, whereClause.Name, valueList)
+			}
 		} else {
+			// this where clause is NOT indexed
 			if (empty) {
-				results = cache[query.EventLog]["blockNumber"]
+				lastResults["first"] = cache[query.EventLog]["blockNumber"]
 				empty = false
 			}
-			if (query.Debug) {
-				fmt.Println("Naive search");
+			for name, valueResults := range lastResults {
+				currentResults[name] = naiveSearch(valueResults, query)
 			}
-			results = naiveSearch(results, query)
 		}
+
 		if (query.Debug) {
-			fmt.Printf("Where clause results is now = %v\n", len(results))
+			fmt.Printf("Partitioned results for where %v = %v\n", whereClause.Name, currentResults)
+		}
+		lastResults = currentResults
+	}
+
+	results := [] map[string]interface{}{}
+	// now union all the last results
+	for _, r := range lastResults {
+		for _, result := range r {
+			results = append(
+				results,
+				result);
 		}
 	}
+	if (query.Debug) {
+		fmt.Printf("Unioning the results %v\n", lastResults)
+		fmt.Printf("Union of the results %v\n", results)
+	}
+
 	if (empty) {
 		values := cache[query.EventLog]["blockNumber"]
 		for _, value := range values {
@@ -95,8 +116,29 @@ func queryForCache(cache Cache, query Query) [] map[string]interface{} {
 	return results 
 }
 
-func searchByKey(rows []map[string]interface{}, name string, valueList []interface{}) [] map[string]interface{} {
-	results := []map[string]interface{}{}
+
+func sortWhereClausesByIndex(query Query) {
+	sort.Slice(query.WhereClauses, func(i, j int) bool {
+		nameA := query.WhereClauses[i].Name
+		nameB := query.WhereClauses[j].Name
+		indexOrder := TableIndices[query.EventLog]
+		for _, indexEvent := range indexOrder {
+			if (indexEvent == nameA) {
+				return true;
+			}
+			if (indexEvent == nameB) {
+				return false;
+			}
+		}
+		// if its not indexed, it should go at the end
+		return true
+	});
+}
+
+// return results partitioned by the values in the value list
+// Ex: for where guildId in [1,2,3] return results for partitioned by 1, 2, 3
+func searchByKey(rows []map[string]interface{}, name string, valueList []interface{}) map[string][]map[string]interface{} {
+	results := map[string][]map[string]interface{}{}
 	for _, value := range valueList {
 		x := sort.Search(len(rows), func (i int) bool {
 			if _, ok := value.(string); ok {
@@ -107,12 +149,18 @@ func searchByKey(rows []map[string]interface{}, name string, valueList []interfa
 				return false;
 			}
 		});
+		valueResults := []map[string]interface{}{}
 		for i := x; i < len(rows); i++ {
 			if rows[i][name] == value {
-				results = append(results, rows[i])
+				valueResults = append(valueResults, rows[i])
 			} else {
 				break
 			}
+		}
+		if _, ok := value.(string); ok {
+			results[value.(string)] = valueResults
+		} else if _, ok := value.(float64); ok {
+			results[fmt.Sprintf("%.6f", value.(float64))] = valueResults
 		}
 	}
 	return results

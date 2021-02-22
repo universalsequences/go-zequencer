@@ -3,6 +3,7 @@ package main
 import (
 	"strings"
 	"sort"
+	"fmt"
 )
 
 func getRecentSounds(
@@ -10,9 +11,15 @@ func getRecentSounds(
 	searchTerm string,
 	guildIds []float64,
 	year float64,
-	filterFavorites bool) []SampleResult {
+	filterFavorites bool,
+	releaseId float64) []SampleResult {
 	filterByTitle := false
 	soundIds := []interface{}{}
+
+	guildList := []interface{}{}
+	for _, guildId := range guildIds {
+		guildList = append(guildList, guildId);
+	}
 
 	if (searchTerm != "") {
 		// then we need to search for tags
@@ -23,12 +30,17 @@ func getRecentSounds(
 			soundIds = getSoundsWithOrTags(caches, matchingTags)
 		}
 	}
+	if (releaseId != 0.0) {
+		soundIds = getSamplesFromRelease(caches, releaseId)
+	}
+
 	if (year != 0) {
 		soundIds = getSoundsWithYear(caches, year);
 	}
 
 	if (filterFavorites) {
 		favoritedSounds := getSoundsWithRating(caches, 5)
+		fmt.Printf("Favorited sounds = %v\n", favoritedSounds)
 		if (len(soundIds) == 0) {
 			for id, _ := range favoritedSounds {
 				soundIds = append(
@@ -37,11 +49,6 @@ func getRecentSounds(
 			}
 		} else {
 		}
-	}
-
-	guildList := []interface{}{}
-	for _, guildId := range guildIds {
-		guildList = append(guildList, guildId);
 	}
 
 	query := NewQuery(GUILD_SAMPLES)

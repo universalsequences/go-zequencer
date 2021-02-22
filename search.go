@@ -14,7 +14,18 @@ import (
 const blocksPerDay = 6275
 //const blocksPerDay = 6275*31;
 
-const pageSize = 15;
+type strSlice []string
+
+func (slice strSlice) pos(value string) int {
+    for p, v := range slice {
+        if (v == value) {
+            return p
+        }
+    }
+    return -1
+}
+
+const pageSize = 50
 
 type SearchQuery struct {
 	SearchTerm string `json:"searchTerm"`
@@ -23,6 +34,7 @@ type SearchQuery struct {
 	Year float64 `json:"year"`
 	Start float64 `json:"start"`
 	FilterFavorites bool `json:"filterFavorites"`
+	ReleaseId float64 `json:"releaseId"`
 }
 
 type QueryResults struct {
@@ -116,12 +128,14 @@ func paginate(start float64, results [] BlockResults) []BlockResults {
 }
 
 func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []BlockResults {
+	fmt.Printf("RUNN QUERY WITH GUILD IDS =%v\n", query.GuildIds)
 	recentSounds := getRecentSounds(
 		caches,
 		query.SearchTerm,
 		query.GuildIds,
 		query.Year,
-		query.FilterFavorites)
+		query.FilterFavorites,
+		query.ReleaseId)
 	recentDiscogs := getRecentDiscogs(caches, recentSounds)
 	recentArtists := getRecentArtists(caches, recentSounds)
 	recentReleases := getRecentReleases(caches, recentDiscogs)
@@ -205,7 +219,7 @@ func getByTag(results []SampleResult, searchTerm string) []BlockResults {
 	tagToResults := map[string][]SampleResult{}
 	for _, result := range results {
 		for _, tag := range result.Tags {
-			if (len(result.Tags) > 1 && tag == searchTerm) {
+			if (searchTerm != "" && strings.Contains(tag, strings.ToLower(searchTerm)) && len(result.Tags) > 1) {
 				continue
 			}
 			trimmed := strings.TrimSpace(tag)
@@ -214,17 +228,41 @@ func getByTag(results []SampleResult, searchTerm string) []BlockResults {
 		}
 	}
 
+	tags := strSlice {}
+	for tag, _ := range tagToResults {
+		tags = append(tags, tag)
+	}
+
+	sort.Slice(tags, func (i, j int) bool {
+		return len(tagToResults[tags[i]]) > len(tagToResults[tags[j]]);
+	});
+
 	blockResults := []BlockResults{}
 	samplesProcessed := map[string]bool{}
-	for tag, results := range tagToResults {
-
+	for _, tag := range tags {
+		results := tagToResults[tag];
 		if (strings.HasPrefix(tag, "0")) {
 			continue
 		}
 		resultsToProcess := []SampleResult{}
 		for _, result := range results {
-			if _, ok := samplesProcessed[result.IpfsHash]; ok {
-				continue
+			// TODO: in order to properly break stuff up
+			// If searchTerm=KORG and tags=[KORG, KORG M1 Kick],
+			// choose the second most popular tag (i.e. KORG M1 Kick).
+			// If tag !== this second most popular tag, then skip it
+			// It will be caught when that tag is processed
+			if (searchTerm != "") {
+				secondMostPopular := getSecondMostPopularTag(tags, result.Tags)
+				if (strings.Contains(strings.ToLower(tag), strings.ToLower(searchTerm)) &&
+					secondMostPopular != "" && secondMostPopular != tag) {
+					continue
+				}
+			}
+
+			if (searchTerm != "") {
+				if _, ok := samplesProcessed[result.IpfsHash]; ok {
+					continue
+				}
 			}
 			samplesProcessed[result.IpfsHash] = true
 			resultsToProcess = append(
@@ -235,12 +273,38 @@ func getByTag(results []SampleResult, searchTerm string) []BlockResults {
 		if (len(resultsToProcess) == 0) {
 			continue
 		}
-		blockResults = append(
-			blockResults,
-			BlockResults{
-				Tag: tag,
-				Results: resultsToProcess,
-			})
+		// if every result to process contains another tag that
+		// is ranked higher than dont do append
+		skip := true
+		if (searchTerm == "") {
+			position := tags.pos(tag)
+			for _, r := range resultsToProcess {
+				min := 1000000000
+				for _, t := range r.Tags {
+					_position := tags.pos(t)
+					if (_position < min) {
+						min = _position
+					}
+				}
+				if (min < position) {
+					// contains a tag that is ranked higher
+				} else {
+					skip = false
+					break
+				}
+			}
+		} else {
+			skip = false
+		}
+		
+		if (!skip) {
+			blockResults = append(
+				blockResults,
+				BlockResults{
+					Tag: tag,
+					Results: resultsToProcess,
+				})
+		}
 	}
 
 	sort.Sort(ByTag(blockResults))
@@ -320,12 +384,8 @@ func partitionBySource(byDay [] BlockResults, searchTerm string) []BlockResults 
 					dayResult.Youtube[result.VideoId],
 					result);
 			} else {
-				tag := "";
-				if (len(result.Tags) > 0) {
-					tag = result.Tags[0]
-				}
-
-				found := findInList(result.Tags, strings.ToLower(searchTerm))
+				tag := getMostPopularTag(result.Tags, dayResult.Unsourced, strings.ToLower(toPartition.Tag), strings.ToLower(searchTerm))
+				found := tag //findInList(result.Tags, strings.ToLower(searchTerm))
 				if (searchTerm != "" && found != "") {
 					tag = found
 				}
@@ -361,3 +421,44 @@ func findInList(tags [] string, searchTerm string) string {
 }
 
 
+func getMostPopularTag(tags [] string, unsourced map[string][]SampleResult, a string, b string) string {
+	max := -1
+	maxTag := ""
+	for _, tag := range tags {
+		if (strings.Contains(strings.ToLower(tag), a)) {
+			continue
+		}
+		if (strings.Contains(strings.ToLower(tag), b)) {
+			continue
+		}
+		if (strings.Contains(strings.ToLower(tag), "Resampled")) {
+			continue
+		}
+		tagLength := len(unsourced[tag])
+		if (tagLength > max) {
+			maxTag = tag
+			max = tagLength
+		}
+	}
+	if (maxTag == "" && len(tags) > 0) {
+		return tags[0];
+	}
+	return maxTag
+}
+	
+func getSecondMostPopularTag(orderedTags strSlice, tags []string) string {
+	t := []string{}
+	for _, tag := range tags {
+		t = append(t, tag);
+	}
+
+	sort.Slice(t, func (i, j int) bool {
+		return orderedTags.pos(t[i]) > orderedTags.pos(t[j])
+	});
+
+	if (len(t) >= 2) {
+		return t[1]
+	} else {
+		return ""
+	} 
+}

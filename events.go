@@ -27,7 +27,7 @@ const NewAnnotation = "NewAnnotation(bytes32,bytes32,bytes32,address)"
 // have max 2 keys to index on - so that they can do sub-sorting based on the other key
 var TableIndices = map[string][]string {
 	SampleCreated: []string{"guildId", "ipfsHash"},
-	SampleTagged: []string{"tag", "ipfsHash"},
+	SampleTagged: []string{"tag", "guildId", "ipfsHash"},
 	SampleYear: []string{"year", "ipfsHash"},
 	SampleYoutube: []string{"videoId", "ipfsHash"},
 	NewDiscogsSample: []string{"sampleHash", "discogsId"},
@@ -47,5 +47,5 @@ var TableIndices = map[string][]string {
 	SequenceUnstarred: []string{"ipfsHash",  "guildId"},
 	SequenceFavorited: []string{"ipfsHash", "user", "guildId"},
 	SequenceUnfavorited: []string{"ipfsHash", "user", "guildId"},
-	NewAnnotation: []string{"data", "annotationData", "annotationType"},
+	NewAnnotation: []string{"data", "annotationType"},
 }

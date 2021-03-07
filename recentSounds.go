@@ -3,7 +3,6 @@ package main
 import (
 	"strings"
 	"sort"
-	"fmt"
 )
 
 func getRecentSounds(
@@ -12,7 +11,8 @@ func getRecentSounds(
 	guildIds []float64,
 	year float64,
 	filterFavorites bool,
-	releaseId float64) []SampleResult {
+	releaseId float64,
+	videoId string) []SampleResult {
 	filterByTitle := false
 	soundIds := []interface{}{}
 
@@ -34,13 +34,16 @@ func getRecentSounds(
 		soundIds = getSamplesFromRelease(caches, releaseId)
 	}
 
+	if (videoId != "") {
+		soundIds = getSamplesFromVideo(caches, videoId)
+	}
+
 	if (year != 0) {
 		soundIds = getSoundsWithYear(caches, year);
 	}
 
 	if (filterFavorites) {
 		favoritedSounds := getSoundsWithRating(caches, 5)
-		fmt.Printf("Favorited sounds = %v\n", favoritedSounds)
 		if (len(soundIds) == 0) {
 			for id, _ := range favoritedSounds {
 				soundIds = append(

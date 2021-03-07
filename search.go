@@ -35,6 +35,7 @@ type SearchQuery struct {
 	Start float64 `json:"start"`
 	FilterFavorites bool `json:"filterFavorites"`
 	ReleaseId float64 `json:"releaseId"`
+	VideoId string `json:"videoId"`
 }
 
 type QueryResults struct {
@@ -95,7 +96,8 @@ func HandleSearchQuery(
 	unpaginatedQueryString := string(unpaginatedQueryBytes)
 
 	if unpaginatedResults, ok := cachedQueries.getQuery(unpaginatedQueryString); ok {
-		ret, _ := json.Marshal(paginate(start, unpaginatedResults))
+		paginated := paginate(start, unpaginatedResults)
+		ret, _ := json.Marshal(paginated)
 		w.Write(ret)
 		return
 	}
@@ -128,14 +130,14 @@ func paginate(start float64, results [] BlockResults) []BlockResults {
 }
 
 func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []BlockResults {
-	fmt.Printf("RUNN QUERY WITH GUILD IDS =%v\n", query.GuildIds)
 	recentSounds := getRecentSounds(
 		caches,
 		query.SearchTerm,
 		query.GuildIds,
 		query.Year,
 		query.FilterFavorites,
-		query.ReleaseId)
+		query.ReleaseId,
+		query.VideoId)
 	recentDiscogs := getRecentDiscogs(caches, recentSounds)
 	recentArtists := getRecentArtists(caches, recentSounds)
 	recentReleases := getRecentReleases(caches, recentDiscogs)
@@ -146,9 +148,9 @@ func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []Bl
 	sounds := combineAll(recentSounds, recentDiscogs, recentYoutubes, recentTags, ratings, recentReleases, recentArtists);
 	var results []BlockResults
 	if (query.GroupBy == "tag") {
-		results = partitionBySource(getByTag(sounds, query.SearchTerm), query.SearchTerm)
+		results = partitionBySource(getByTag(sounds, query.SearchTerm, query.ReleaseId, query.VideoId), query.SearchTerm, query.VideoId != "" || query.ReleaseId != 0.0)
 	} else {
-		results = partitionBySource(getByDay(sounds), query.SearchTerm)
+		results = partitionBySource(getByDay(sounds), query.SearchTerm, false)
 	}
 	return results;
 }
@@ -215,7 +217,7 @@ type TempBlock struct {
 	Results *[]SampleResult
 };
 
-func getByTag(results []SampleResult, searchTerm string) []BlockResults {
+func getByTag(results []SampleResult, searchTerm string, releaseId float64, videoId string) []BlockResults {
 	tagToResults := map[string][]SampleResult{}
 	for _, result := range results {
 		for _, tag := range result.Tags {
@@ -259,7 +261,7 @@ func getByTag(results []SampleResult, searchTerm string) []BlockResults {
 				}
 			}
 
-			if (searchTerm != "") {
+			if (searchTerm != "" || releaseId != 0.0 || videoId != "") {
 				if _, ok := samplesProcessed[result.IpfsHash]; ok {
 					continue
 				}
@@ -356,7 +358,7 @@ func getByDay(results []SampleResult) []BlockResults{
 	return realBlocks;
 };
 
-func partitionBySource(byDay [] BlockResults, searchTerm string) []BlockResults {
+func partitionBySource(byDay [] BlockResults, searchTerm string, keepTags bool) []BlockResults {
 	partitioned := []BlockResults{}
 	for _, toPartition := range byDay {
 		results := toPartition.Results;
@@ -369,14 +371,14 @@ func partitionBySource(byDay [] BlockResults, searchTerm string) []BlockResults 
 			Unsourced: map[string][]SampleResult{},
 		}
 		for _, result := range results {
-			if (result.DiscogsId != 0) {
+			if (result.DiscogsId != 0 && !keepTags) {
 				if _, ok := dayResult.Discogs[result.CoverArtHash]; !ok {
 					dayResult.Discogs[result.CoverArtHash] = []SampleResult{}
 				} 
 				dayResult.Discogs[result.CoverArtHash] = append(
 					dayResult.Discogs[result.CoverArtHash],
 					result);
-			} else if (result.VideoId != "") {
+			} else if (result.VideoId != "" && !keepTags) {
 				if _, ok := dayResult.Youtube[result.VideoId]; !ok {
 					dayResult.Youtube[result.VideoId] = []SampleResult{}
 				}

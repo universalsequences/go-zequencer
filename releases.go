@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -98,8 +97,6 @@ func getSamplesFromRelease(caches *Caches, releaseId float64) []interface{} {
 			result["sampleHash"])
 	}
 
-	fmt.Printf("Getting samples from release %v\n", releaseId);
-	fmt.Println(soundIds);
 	return soundIds 
 }
 

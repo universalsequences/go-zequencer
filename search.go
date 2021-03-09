@@ -1,3 +1,4 @@
+
 package main
 
 import (
@@ -25,8 +26,6 @@ func (slice strSlice) pos(value string) int {
     return -1
 }
 
-const pageSize = 50
-
 type SearchQuery struct {
 	SearchTerm string `json:"searchTerm"`
 	GuildIds []float64 `json:"guildIds"`
@@ -36,6 +35,8 @@ type SearchQuery struct {
 	FilterFavorites bool `json:"filterFavorites"`
 	ReleaseId float64 `json:"releaseId"`
 	VideoId string `json:"videoId"`
+	Tag string `json:"tag"`
+	Size float64 `json:"size"`
 }
 
 type QueryResults struct {
@@ -67,9 +68,10 @@ type BlockResults struct {
 	Unsourced map[string][]SampleResult `json:"unsourced"`
 	Youtube map[string][]SampleResult `json:"youtube"`
 	Discogs map[string][]SampleResult `json:"discogs"`
-	BlockNumber float64 `json:"blockNumber"`
 	Results []SampleResult `json:"results"`
+	BlockNumber float64 `json:"blockNumber"`
 	Tag string `json:"tag"`
+	TotalResults int `json:"totalResults"`
 }
 
 func HandleSearchQuery(
@@ -89,14 +91,27 @@ func HandleSearchQuery(
 	query := SearchQuery{}
 	json.Unmarshal([]byte(bodyString), &query)
 	start := query.Start
+	tag := query.Tag
+	searchTerm := query.SearchTerm
+	groupBy := query.GroupBy
 	query.Start = 0
+	query.Tag = ""
+	isLazy := tag == "" && searchTerm == "" && groupBy == "tag" && query.ReleaseId == 0 && query.VideoId == "";
 
 	// unpaginated queryr
 	unpaginatedQueryBytes, _ := json.Marshal(query)
 	unpaginatedQueryString := string(unpaginatedQueryBytes)
 
 	if unpaginatedResults, ok := cachedQueries.getQuery(unpaginatedQueryString); ok {
-		paginated := paginate(start, unpaginatedResults)
+		paginated := []BlockResults{}
+		if (tag != "") {
+			paginated = filterByTag(tag, unpaginatedResults)
+		} else {
+			paginated = paginate(start, unpaginatedResults, query.Size)
+			if (isLazy) {
+				paginated = removeDeepResults(paginated)
+			}
+		}
 		ret, _ := json.Marshal(paginated)
 		w.Write(ret)
 		return
@@ -106,7 +121,11 @@ func HandleSearchQuery(
 	
 	cachedQueries.newQuery(unpaginatedQueryString, unpaginatedResults)
 
-	paginatedResults := paginate(start, unpaginatedResults)
+	paginatedResults := paginate(start, unpaginatedResults, query.Size)
+
+	if (isLazy) {
+		paginatedResults = removeDeepResults(paginatedResults)
+	}
 	ret, _ := json.Marshal(paginatedResults)
 	w.Write(ret)
 }
@@ -118,11 +137,34 @@ func prePopulateCache(caches *Caches, ratingsCache *RatingCache, cachedQueries *
 	fmt.Println("Finished pre-populating cache")
 }
 
-func paginate(start float64, results [] BlockResults) []BlockResults {
+func removeDeepResults(results []BlockResults) []BlockResults {
+	lazyResults := []BlockResults{}
+	for _, result := range results {
+		lazyResults = append(
+			lazyResults,
+			BlockResults{
+				Tag: result.Tag,
+				TotalResults: result.TotalResults,
+				BlockNumber: result.BlockNumber,
+			})
+	}
+	return lazyResults
+}
+func filterByTag(tag string, results [] BlockResults) []BlockResults {
+	tagResults := []BlockResults{}
+	for _, result := range results {
+		if (result.Tag == tag) { 
+			tagResults = append(tagResults, result)
+		}
+	}
+	return tagResults
+}
+
+func paginate(start float64, results [] BlockResults, pageSize float64) []BlockResults {
 	if (int(start) >= len(results)) {
 		return []BlockResults{}
 	}
-	if (int(start) + pageSize > len(results)) {
+	if (int(start) + int(pageSize) > len(results)) {
 		return results[int64(start):len(results)]
 	} else {
 		return results[int64(start):int64(start+pageSize)]
@@ -148,7 +190,14 @@ func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []Bl
 	sounds := combineAll(recentSounds, recentDiscogs, recentYoutubes, recentTags, ratings, recentReleases, recentArtists);
 	var results []BlockResults
 	if (query.GroupBy == "tag") {
-		results = partitionBySource(getByTag(sounds, query.SearchTerm, query.ReleaseId, query.VideoId), query.SearchTerm, query.VideoId != "" || query.ReleaseId != 0.0)
+		results = partitionBySource(
+			getByTag(
+				sounds,
+				query.SearchTerm,
+				query.ReleaseId,
+				query.VideoId),
+			query.SearchTerm,
+			query.VideoId != "" || query.ReleaseId != 0.0)
 	} else {
 		results = partitionBySource(getByDay(sounds), query.SearchTerm, false)
 	}
@@ -365,6 +414,7 @@ func partitionBySource(byDay [] BlockResults, searchTerm string, keepTags bool) 
 		dayResult := BlockResults{
 			BlockNumber: toPartition.BlockNumber,
 			Tag: toPartition.Tag,
+			TotalResults: len(toPartition.Results),
 			Results: toPartition.Results,
 			Discogs: map[string][]SampleResult{},
 			Youtube: map[string][]SampleResult{},

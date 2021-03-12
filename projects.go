@@ -18,6 +18,7 @@ type ProjectsQuery struct {
 	Favorited bool `json:"favorited"`
 	FilterMine bool `json:"filterMine"`
 	SearchTag string`json:"searchTag"`
+	GuildIds []float64 `json:"guildIds"`
 }
 
 type Project struct {
@@ -27,7 +28,12 @@ type Project struct {
 	User string `json:"user"`
 	Edits int `json:"edits"`
 	BlockNumber float64 `json:"blockNumber"`
+	PublicKey string `json:"publicKey"`
+	EncryptedName string `json:"encryptedName"`
+	EncryptedContentKey string `json:"encryptedContentKey"`
+	GuildId float64 `json:"guildId"`
 }
+
 
 func HandleProjectsQuery(
 	w http.ResponseWriter,
@@ -69,16 +75,26 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 	if (query.FilterMine) {
 		queryBuilder.WhereIs("user", query.User)
 	}
+	results := []map[string]interface{}{}
+	for _, guildId := range query.GuildIds {
+		if (guildId == 0) {
+			results = queryBuilder.ExecuteQuery(caches)
+			break
+		}
+	}
+	projectResults := convertToProjects(results)
+	guildResults := getGuildSequences(caches, query.GuildIds, query.FilterMine, query.User)
+	for _, result := range guildResults {
+		projectResults = append(projectResults, result)
+	}
 
-	results := queryBuilder.ExecuteQuery(caches)
-
-	filtered := []map[string]interface{}{}
+	filtered := []Project{}
 	starred := GetStarredProjects(caches)
 	favorited := GetFavoritedProjects(caches, query.User)
 	projectTags := GetProjectTags(caches)
 
-	for _, result := range results {
-		id := result["newSequence"].(string)
+	for _, result := range projectResults {
+		id := result.NewSequence
 		if (query.Favorited && query.Starred) {
 			if _, ok := starred[id]; !ok {
 				if _, ok2 := favorited[id]; !ok2 {
@@ -121,7 +137,7 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 				}
 			}
 
-			if (!matchedTag && !strings.Contains(strings.ToLower(result["title"].(string)), strings.ToLower(query.SearchTerm))) {
+			if (!matchedTag && !strings.Contains(strings.ToLower(result.Title), strings.ToLower(query.SearchTerm))) {
 				continue;
 			}
 		}
@@ -131,7 +147,7 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 			result)
 	}
 
-	return collapseProjects(convertToProjects(filtered))
+	return collapseProjects(filtered) //collapseProjects(convertToProjects(filtered))
 }
 
 func convertToProjects(
@@ -191,7 +207,7 @@ func collapseProjects(projects []Project) []Project {
 func getAllEdits(project Project, idToProject map[string]Project) []Project {
 	if previousProject, ok := idToProject[project.PreviousSequence]; ok {
 		// then we have a previous project that exists
-		if previousProject == project {
+		if ok && previousProject.NewSequence == project.NewSequence {
 			return []Project{project}
 		}
 		

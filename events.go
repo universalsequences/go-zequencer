@@ -45,7 +45,7 @@ var TableIndices = map[string][]string {
 	NewEncryptedContent: []string{"newContent","blockNumber"},
 	NewGuildMemberRequestAccepted: []string{"newMember", "guildId"},
 	EncryptedContentShared: []string{"contentHash", "sharedWith"},
-	NewGuildSequence: []string{"contentHash", "guildId"},
+	NewGuildSequence: []string{"guildId", "contentHash"},
 	SequenceStarred: []string{"ipfsHash", "guildId"},
 	SequenceUnstarred: []string{"ipfsHash",  "guildId"},
 	SequenceFavorited: []string{"ipfsHash", "user", "guildId"},

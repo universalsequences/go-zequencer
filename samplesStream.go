@@ -1,13 +1,14 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
+	"math/rand"
 	"time"
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"sort"
-	"math/rand"
 	"math"
 )
 	
@@ -26,7 +27,7 @@ type RatedSound struct {
 	Rating float64 
 }
 
-const PART_RATIO = 0.7
+const PART_RATIO = 0.5
 
 func HandleSamplesStreamQuery(
 	w http.ResponseWriter,
@@ -76,8 +77,8 @@ func runSamplesStreamQuery(
 
 	projectCount := getProjectCountForSamples(caches, sounds)
 	resampledSounds := getResampledSamples(caches, sounds)
-	blockNumbers := getBlockNumbers(caches, sounds)
-	minBlock := getMinBlock(blockNumbers)
+	// blockNumbers := getBlockNumbers(caches, sounds)
+	// minBlock := getMinBlock(blockNumbers)
 
 	// now sort by rating
 	ratedSounds := []RatedSound{}
@@ -88,11 +89,11 @@ func runSamplesStreamQuery(
 			count = val
 		}
 
-		blockNumber := blockNumbers[id] - minBlock
-		adjustedBlock := math.Pow(blockNumber, 1.0/64.0);
+		//blockNumber := blockNumbers[id] - minBlock
 
-		rating := adjustedBlock +
-			math.Pow((float64((1.0 + (*ratingsCache)[id])) / 5.0), 2) * math.Sqrt(float64(count))
+		rating := 
+			math.Pow((float64((*ratingsCache)[id])) , 3) *
+				float64(count+1)
 
 		if _, ok := resampledSounds[id]; ok {
 			rating = math.Pow(rating, 1 / 4.0)
@@ -282,6 +283,7 @@ func shuffleInParts(ids []string) [] string {
 
 	partSize := int(math.Floor(math.Pow(float64(len(ids)) , PART_RATIO)))
 
+	fmt.Printf("PART SIZE =%v\n", partSize)
 	parts := [][]string{}
 	current := []string{}
 	for i, id := range ids {

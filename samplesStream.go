@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 	"encoding/json"
@@ -71,14 +70,21 @@ func runSamplesStreamQuery(
 	sounds := []string{}
 	if (len(query.OrTags) == 0) {
 		sounds = getSamplesWithAndTags(caches, query.AndTags, query.GuildIds)
+		if (len(sounds) < 20) {
+			moreSounds := getSamplesWithOrTags(caches, query.AndTags, query.GuildIds)
+			for _, sound := range moreSounds {
+				sounds = append(
+					sounds, sound)
+			}
+		} 
 	} else {
 		sounds = getSamplesWithOrTags(caches, query.OrTags, query.GuildIds)
 	}
 
 	projectCount := getProjectCountForSamples(caches, sounds)
 	resampledSounds := getResampledSamples(caches, sounds)
-	// blockNumbers := getBlockNumbers(caches, sounds)
-	// minBlock := getMinBlock(blockNumbers)
+	blockNumbers := getBlockNumbers(caches, sounds)
+	maxBlock := getMaxBlock(blockNumbers)
 
 	// now sort by rating
 	ratedSounds := []RatedSound{}
@@ -97,6 +103,11 @@ func runSamplesStreamQuery(
 
 		if _, ok := resampledSounds[id]; ok {
 			rating = math.Pow(rating, 1 / 4.0)
+		}
+
+		// samples of the last month are prioritized
+		if (maxBlock - blockNumbers[id] <= blocksPerDay * 31) {
+			rating = (rating + 1)*2000
 		}
 
 		ratedSounds = append(
@@ -162,14 +173,14 @@ func getSamplesWithAndTags(caches *Caches, tags []string, guildIds []float64) []
 	return samples
 }
 
-func getMinBlock(blockNumbers map[string]float64) float64{
-	min := 10000000.0
+func getMaxBlock(blockNumbers map[string]float64) float64{
+	max := 0.0
 	for _, blockNumber := range blockNumbers {
-		if (blockNumber < min) {
-			min = blockNumber
+		if (blockNumber > max) {
+			max = blockNumber
 		}
 	}
-	return min
+	return max 
 }
 
 func getBlockNumbers(caches *Caches, ids []string) map[string]float64 {
@@ -283,7 +294,6 @@ func shuffleInParts(ids []string) [] string {
 
 	partSize := int(math.Floor(math.Pow(float64(len(ids)) , PART_RATIO)))
 
-	fmt.Printf("PART SIZE =%v\n", partSize)
 	parts := [][]string{}
 	current := []string{}
 	for i, id := range ids {

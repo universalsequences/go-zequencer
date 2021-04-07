@@ -26,7 +26,7 @@ type RatedSound struct {
 	Rating float64 
 }
 
-const PART_RATIO = 0.5
+const PART_RATIO = 0.55
 
 func HandleSamplesStreamQuery(
 	w http.ResponseWriter,
@@ -84,7 +84,7 @@ func runSamplesStreamQuery(
 	projectCount := getProjectCountForSamples(caches, sounds)
 	resampledSounds := getResampledSamples(caches, sounds)
 	blockNumbers := getBlockNumbers(caches, sounds)
-	maxBlock := getMaxBlock(blockNumbers)
+	minBlock := getMinBlock(blockNumbers)
 
 	// now sort by rating
 	ratedSounds := []RatedSound{}
@@ -95,19 +95,20 @@ func runSamplesStreamQuery(
 			count = val
 		}
 
-		//blockNumber := blockNumbers[id] - minBlock
+		blockDist := blockNumbers[id] - minBlock
+		if (blockDist < 0) {
+			blockDist = 100
+		}
 
 		rating := 
-			math.Pow((float64((*ratingsCache)[id])) , 3) *
-				float64(count+1)
+			math.Pow((float64((*ratingsCache)[id]) + 1.0) , 2) *
+				math.Pow(float64(count+1), 0.5)
+
+		// i want new sounds to be valued in proportion to how new they are
+		rating = math.Pow(blockDist, 1.5) * math.Pow(rating, 0.35)
 
 		if _, ok := resampledSounds[id]; ok {
 			rating = math.Pow(rating, 1 / 4.0)
-		}
-
-		// samples of the last month are prioritized
-		if (maxBlock - blockNumbers[id] <= blocksPerDay * 31) {
-			rating = (rating + 1)*2000
 		}
 
 		ratedSounds = append(
@@ -173,14 +174,14 @@ func getSamplesWithAndTags(caches *Caches, tags []string, guildIds []float64) []
 	return samples
 }
 
-func getMaxBlock(blockNumbers map[string]float64) float64{
-	max := 0.0
+func getMinBlock(blockNumbers map[string]float64) float64{
+	min:= 10000000000.0
 	for _, blockNumber := range blockNumbers {
-		if (blockNumber > max) {
-			max = blockNumber
+		if (blockNumber < min) {
+			min = blockNumber
 		}
 	}
-	return max 
+	return min 
 }
 
 func getBlockNumbers(caches *Caches, ids []string) map[string]float64 {
@@ -252,7 +253,6 @@ func getResampledSamples(caches *Caches, ids []string) map[string]bool {
 	query.From(SampleTagged)
 	query.Select("ipfsHash")
 	query.WhereIs("tag", "Resampled")
-	query.WhereIn("ipfsHash", idsToFilter)
 
 	results := query.ExecuteQuery(caches)
 	blockMap := map[string]bool{}

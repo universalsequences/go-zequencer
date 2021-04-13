@@ -18,7 +18,7 @@ func getGuildSequences(caches *Caches, guildIds []float64, filterMine bool, user
 	queryBuilder.Select("guildId")
 	queryBuilder.WhereIn("guildId", guilds)
 
-	if (filterMine) {
+	if (filterMine || user != "") {
 		queryBuilder.WhereIs("user", user)
 	}
 	

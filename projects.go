@@ -32,6 +32,7 @@ type Project struct {
 	EncryptedName string `json:"encryptedName"`
 	EncryptedContentKey string `json:"encryptedContentKey"`
 	GuildId float64 `json:"guildId"`
+	Collaborators []string `json:"collaborators"`
 }
 
 
@@ -72,7 +73,8 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 	queryBuilder.Select("title")
 	queryBuilder.Select("user")
 
-	if (query.FilterMine) {
+	if (query.FilterMine || query.User != "") {
+		fmt.Printf("FILTERING BY USER=%v\n", query.User)
 		queryBuilder.WhereIs("user", query.User)
 	}
 	results := []map[string]interface{}{}
@@ -194,7 +196,9 @@ func collapseProjects(projects []Project) []Project {
 	for _, project := range projects {
 		if _, ok := projectToNext[project.NewSequence]; !ok {
 			// has no next so its the top
-			edits := len(getAllEdits(project, idToProject))
+			allEdits := getAllEdits(project, idToProject)
+			edits := len(allEdits)
+			project.Collaborators = getCollaborators(allEdits)
 			project.Edits = edits - 1
 			collapsed = append(
 				collapsed,
@@ -218,4 +222,20 @@ func getAllEdits(project Project, idToProject map[string]Project) []Project {
 	
 	// no previous projects so just return singleton list
 	return []Project{project}
+}
+
+func getCollaborators(projects []Project) []string {
+	collabMap := map[string]bool{}
+
+	for _, project := range projects {
+		collabMap[project.User] = true
+	}
+
+	collaborators := []string{}
+	for collaborator, _ := range collabMap {
+		collaborators = append(
+			collaborators,
+			collaborator)
+	}
+	return collaborators
 }

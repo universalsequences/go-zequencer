@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"fmt"
 )
 
 const TOKENIZED_SEQUENCES = "0x606f760c228cd5f11c6f79de64d3b299b11f1ed1"
@@ -15,7 +14,7 @@ type ProjectsQuery struct {
 	SearchTerm string `json:"searchTerm"`
 	User       string `json:"user"`
 	Starred bool `json:"starred"`
-	Favorited bool `json:"favorited"`
+	Favorited string `json:"favorited"`
 	FilterMine bool `json:"filterMine"`
 	SearchTag string`json:"searchTag"`
 	GuildIds []float64 `json:"guildIds"`
@@ -64,8 +63,6 @@ func HandleProjectsQuery(
 }
 
 func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
-	fmt.Println("runProjectsQuery")
-
 	queryBuilder := NewQuery(TOKENIZED_SEQUENCES)
 	queryBuilder.From(SequenceEdited)
 	queryBuilder.Select("previousSequence")
@@ -74,7 +71,6 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 	queryBuilder.Select("user")
 
 	if (query.FilterMine || query.User != "") {
-		fmt.Printf("FILTERING BY USER=%v\n", query.User)
 		queryBuilder.WhereIs("user", query.User)
 	}
 	results := []map[string]interface{}{}
@@ -92,18 +88,18 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 
 	filtered := []Project{}
 	starred := GetStarredProjects(caches)
-	favorited := GetFavoritedProjects(caches, query.User)
+	favorited := GetFavoritedProjects(caches, query.Favorited)
 	projectTags := GetProjectTags(caches)
 
 	for _, result := range projectResults {
 		id := result.NewSequence
-		if (query.Favorited && query.Starred) {
+		if (query.Favorited != "" && query.Starred) {
 			if _, ok := starred[id]; !ok {
 				if _, ok2 := favorited[id]; !ok2 {
 					continue
 				}
 			}
-		} else if (query.Favorited) {
+		} else if (query.Favorited != "") {
 				if _, ok := favorited[id]; !ok {
 					continue
 				}

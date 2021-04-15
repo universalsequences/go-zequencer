@@ -39,7 +39,12 @@ func HandleReloadRequest(
 	for _, contract := range query.Changes {
 		fmt.Printf("Reloading contract=%v\n", contract)
 		(*caches)[contract] = LoadCache(directoryPath + contract + ".json")
-		if (contract == TOKENIZED_SEQUENCES) {
+
+		// certain contracts getting updated should result in clearing the cache
+		// since the results may have changed
+		if (contract == TOKENIZED_SEQUENCES ||
+			contract == XANADU ||
+			contract == GUILD_SEQUENCES) {
 			projectsCachedQueries.Clear()
 		} else if (contract == GUILD_SAMPLES || contract == ARTISTS_CONTRACT) {
 			streamCachedQueries.Clear()

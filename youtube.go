@@ -37,11 +37,12 @@ func getRecentYoutubeSamples(caches *Caches, recentSounds []SampleResult) []Samp
 }
 
 
-func getSamplesFromVideo(caches *Caches, videoId string) []interface{} {
+func getSamplesFromVideo(caches *Caches, videoId string, guildIds []interface{}) []interface{} {
 	query := NewQuery(GUILD_SAMPLES)
 	query.From(SampleYoutube)
 	query.Select("ipfsHash")
 	query.WhereIs("videoId", videoId)
+	query.WhereIn("guildId", guildIds)
 	results := queryForCache((*caches)[GUILD_SAMPLES], query)
 
 	soundIds := [] interface {}{}

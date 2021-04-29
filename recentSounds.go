@@ -12,7 +12,8 @@ func getRecentSounds(
 	year float64,
 	filterFavorites bool,
 	releaseId float64,
-	videoId string) []SampleResult {
+	videoId string,
+	user string) []SampleResult {
 	filterByTitle := false
 	soundIds := []interface{}{}
 
@@ -27,23 +28,24 @@ func getRecentSounds(
 		if (len(matchingTags) == 0) {
 			filterByTitle = true
 		} else {
-			soundIds = getSoundsWithOrTags(caches, matchingTags)
+			soundIds = getSoundsWithOrTags(caches, matchingTags, guildList)
 		}
 	}
 	if (releaseId != 0.0) {
-		soundIds = getSamplesFromRelease(caches, releaseId)
+		soundIds = getSamplesFromRelease(caches, releaseId, guildList)
 	}
 
 	if (videoId != "") {
-		soundIds = getSamplesFromVideo(caches, videoId)
+		soundIds = getSamplesFromVideo(caches, videoId, guildList)
 	}
 
 	if (year != 0) {
-		soundIds = getSoundsWithYear(caches, year);
+		soundIds = getSoundsWithYear(caches, year, guildList);
 	}
 
 	if (filterFavorites) {
-		favoritedSounds := getSoundsWithRating(caches, 5)
+		// NEEDS TO INCLUDE USER OR THIS DOESNT MAKE SENSE
+		favoritedSounds := getSoundsWithRating(caches, 5, user)
 		if (len(soundIds) == 0) {
 			for id, _ := range favoritedSounds {
 				soundIds = append(
@@ -56,14 +58,10 @@ func getRecentSounds(
 
 	query := NewQuery(GUILD_SAMPLES)
 	query.From(SampleCreated)
+	query.Select("guildId")
 	query.Select("ipfsHash")
 	query.Select("user")
 	query.Select("title")
-
-	
-	if (!filterFavorites) {
-		query.WhereIn("guildId", guildList)
-	}
 
 	if (len(soundIds) > 0) {
 		query.WhereIn("ipfsHash",soundIds)
@@ -98,6 +96,7 @@ func convertResults(results []map[string]interface{}) []SampleResult {
 		converted.BlockNumber = result["blockNumber"].(float64)
 		converted.IpfsHash = result["ipfsHash"].(string)
 		converted.User = result["user"].(string)
+		converted.GuildId = result["guildId"].(float64)
 		uniqueResults[converted.IpfsHash] = converted
 	}
 	convertedResults := []SampleResult{}
@@ -126,7 +125,7 @@ func findMatchingTags(caches *Caches, searchTerm string) []interface{} {
 	return tags
 }
 
-func getSoundsWithYear(caches *Caches, year float64) []interface{}{
+func getSoundsWithYear(caches *Caches, year float64, guildIds []interface{}) []interface{}{
 	query := Query{
 		Address: GUILD_SAMPLES,
 		EventLog: SampleYear,
@@ -137,6 +136,10 @@ func getSoundsWithYear(caches *Caches, year float64) []interface{}{
 			WhereClause{
 				Name: "year",
 				Value: year,
+			},
+			WhereClause{
+				Name: "guildId",
+				ValueList: guildIds,
 			}},
 		FromBlockNumber: 1,
 	};

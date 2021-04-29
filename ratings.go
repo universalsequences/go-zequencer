@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"strings"
 	"net/http"
 	"log"
 	"encoding/json"
@@ -88,13 +89,16 @@ func getRatings(cache *RatingCache, ids []string) map[string]int {
 	return ratings
 }
 
-func getSoundsWithRating(caches *Caches, rating int) map[string]bool {
+func getSoundsWithRating(caches *Caches, rating int, user string) map[string]bool {
 	query := NewQuery(XANADU)
 	query.From(event)
 	query.Select("data")
 	query.Select("annotationData")
 	query.WhereIs("annotationType", "SAMPLE_RATED")
 	query.WhereIs("annotationData", "5")
+	if (user != "") {
+		query.WhereIs("address", strings.ToLower(user))
+	}
 
 	cache := (*caches)[XANADU] 
 	results := queryForCache(cache, query)

@@ -83,11 +83,12 @@ func getRecentArtists(caches *Caches, sounds []SampleResult) map[string]string {
 
 }
 
-func getSamplesFromRelease(caches *Caches, releaseId float64) []interface{} {
+func getSamplesFromRelease(caches *Caches, releaseId float64, guildIds []interface{}) []interface{} {
 	query := NewQuery(GUILD_SAMPLES)
 	query.From(NewDiscogsSample)
 	query.Select("sampleHash")
 	query.WhereIs("discogsId", releaseId)
+	query.WhereIn("guildId", guildIds)
 	results := queryForCache((*caches)[GUILD_SAMPLES], query)
 
 	soundIds := [] interface {}{}

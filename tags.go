@@ -74,7 +74,7 @@ func getAllTags(caches *Caches) []string {
 	return tags
 }
 
-func getSoundsWithOrTags(caches *Caches, tags []interface{}) []interface{}{
+func getSoundsWithOrTags(caches *Caches, tags []interface{}, guildIds []interface{}) []interface{}{
 	query := Query{
 		Address: GUILD_SAMPLES,
 		EventLog: SampleTagged,
@@ -85,6 +85,10 @@ func getSoundsWithOrTags(caches *Caches, tags []interface{}) []interface{}{
 			WhereClause{
 				Name: "tag",
 				ValueList: tags,
+			},
+			WhereClause{
+				Name: "guilId",
+				ValueList: guildIds,
 			}},
 		FromBlockNumber: 1,
 	};

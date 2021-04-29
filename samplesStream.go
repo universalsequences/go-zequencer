@@ -26,7 +26,7 @@ type RatedSound struct {
 	Rating float64 
 }
 
-const PART_RATIO = 0.55
+const PART_RATIO = 0.65
 
 func HandleSamplesStreamQuery(
 	w http.ResponseWriter,
@@ -70,7 +70,7 @@ func runSamplesStreamQuery(
 	sounds := []string{}
 	if (len(query.OrTags) == 0) {
 		sounds = getSamplesWithAndTags(caches, query.AndTags, query.GuildIds)
-		if (len(sounds) < 20) {
+		if (len(sounds) < 3) {
 			moreSounds := getSamplesWithOrTags(caches, query.AndTags, query.GuildIds)
 			for _, sound := range moreSounds {
 				sounds = append(

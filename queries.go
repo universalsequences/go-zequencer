@@ -6,7 +6,7 @@ import (
 )
 
 const MAX_CACHE_SIZE = 2000
-const MIN_QUERY_SIZE = 20
+const MIN_QUERY_SIZE = 5
 
 type CachedQuery struct {
 	Data []byte 

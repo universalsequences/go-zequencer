@@ -37,6 +37,7 @@ type SearchQuery struct {
 	VideoId string `json:"videoId"`
 	Tag string `json:"tag"`
 	Size float64 `json:"size"`
+	User string `json:"user"`
 }
 
 type QueryResults struct {
@@ -115,7 +116,7 @@ func HandleSearchQuery(
 		ret, _ := json.Marshal(paginated)
 		w.Write(ret)
 		return
-	}
+	} 
 
 	unpaginatedResults := runQuery(caches, ratingsCache, query)
 	
@@ -179,7 +180,8 @@ func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []Bl
 		query.Year,
 		query.FilterFavorites,
 		query.ReleaseId,
-		query.VideoId)
+		query.VideoId,
+		query.User)
 	recentDiscogs := getRecentDiscogs(caches, recentSounds)
 	recentArtists := getRecentArtists(caches, recentSounds)
 	recentReleases := getRecentReleases(caches, recentDiscogs)

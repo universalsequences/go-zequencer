@@ -39,7 +39,7 @@ func getRecentSounds(
 		soundIds = getSamplesFromVideo(caches, videoId, guildList)
 	}
 
-	if (year != 0) {
+	if (year != 0.0) {
 		soundIds = getSoundsWithYear(caches, year, guildList);
 	}
 
@@ -65,6 +65,9 @@ func getRecentSounds(
 
 	if (len(soundIds) > 0) {
 		query.WhereIn("ipfsHash",soundIds)
+	}
+	if (searchTerm == "" || year != 0 || videoId != "" || releaseId != 0.0) {
+		query.WhereIn("guildId",guildList)
 	}
 
 	cache := (*caches)[GUILD_SAMPLES] 

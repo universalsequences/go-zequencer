@@ -59,14 +59,16 @@ func LoadRatings(caches Caches) RatingCache {
 
 	rows := caches[xanaduContract][event]["blockNumber"]
 	for _, row := range rows {
-		if (row["annotationType"].(string) == annotationType) {
-			rating, _ := strconv.Atoi(row["annotationData"].(string))
-			if _, ok :=  sum[row["data"].(string)]; ok {
-				sum[row["data"].(string)] += rating
-				count[row["data"].(string)] += 1
-			} else {
-				sum[row["data"].(string)] = rating 
-				count[row["data"].(string)] += 1
+		if _, ok := row["annotationType"].(string); ok {
+			if (row["annotationType"].(string) == annotationType) {
+				rating, _ := strconv.Atoi(row["annotationData"].(string))
+				if _, ok :=  sum[row["data"].(string)]; ok {
+					sum[row["data"].(string)] += rating
+					count[row["data"].(string)] += 1
+				} else {
+					sum[row["data"].(string)] = rating 
+					count[row["data"].(string)] += 1
+				}
 			}
 		}
 	}

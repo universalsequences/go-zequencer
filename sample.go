@@ -20,6 +20,7 @@ type SampleQueryResults struct {
 	CoverArtHash string `json:"coverArtHash"`
 	DiscogsId float64 `json:"discogsId"`
 	GuildId float64 `json:"guildId"`
+	Year float64 `json:"year"`
 	User string `json:"user"`
 	BlockNumber float64 `json:"blockNumber"`
 }
@@ -69,12 +70,20 @@ func HandleSampleQuery(
 		WhereClauses: []WhereClause{whereClause},
 		LimitSize: 1}
 
+	yearQuery := Query{
+		Address: GUILD_SAMPLES,
+		EventLog: "SampleYear(bytes32,int16,uint32)",
+		SelectStatements: []string{"year"},
+		WhereClauses: []WhereClause{whereClause},
+		LimitSize: 1}
+
 	sampleData := SampleQueryResults{}
 
 	tagResults := queryForCache((*caches)[GUILD_SAMPLES], tagsQuery)
 	titleResults := queryForCache((*caches)[GUILD_SAMPLES], titleQuery)
 	coverArtResults := queryForCache((*caches)[GUILD_SAMPLES], coverArtQuery)
 	videoResults := queryForCache((*caches)[GUILD_SAMPLES], videoQuery)
+	yearResults := queryForCache((*caches)[GUILD_SAMPLES], yearQuery)
 
 	if (len(tagResults) >= 1) {
 		for _, s := range tagResults {
@@ -95,6 +104,10 @@ func HandleSampleQuery(
 
 	if (len(videoResults) >= 1) {
 		sampleData.VideoId = videoResults[0]["videoId"].(string);
+	}
+
+	if (len(yearResults) >= 1) {
+		sampleData.Year = yearResults[0]["year"].(float64);
 	}
 
 	if (len(coverArtResults) >= 1) {

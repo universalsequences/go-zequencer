@@ -97,7 +97,8 @@ func HandleSearchQuery(
 	groupBy := query.GroupBy
 	query.Start = 0
 	query.Tag = ""
-	isLazy := tag == "" && searchTerm == "" && groupBy == "tag" && query.ReleaseId == 0 && query.VideoId == "";
+	isLazy := !query.FilterFavorites && tag == "" && searchTerm == "" && groupBy == "tag" && query.ReleaseId == 0 && query.VideoId == "";
+	
 
 	// unpaginated queryr
 	unpaginatedQueryBytes, _ := json.Marshal(query)

@@ -13,6 +13,7 @@ func getRecentSounds(
 	filterFavorites bool,
 	releaseId float64,
 	videoId string,
+	pack string,
 	user string) []SampleResult {
 	filterByTitle := false
 	soundIds := []interface{}{}
@@ -41,6 +42,10 @@ func getRecentSounds(
 
 	if (year != 0.0) {
 		soundIds = getSoundsWithYear(caches, year, guildList);
+	}
+
+	if (pack != "") {
+		soundIds = getSoundsWithPack(caches, pack, guildList);
 	}
 
 	if (filterFavorites) {

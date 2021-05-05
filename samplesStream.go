@@ -105,7 +105,7 @@ func runSamplesStreamQuery(
 				math.Pow(float64(count+1), 0.5)
 
 		// i want new sounds to be valued in proportion to how new they are
-		rating = math.Pow(blockDist, 1.5) * math.Pow(rating, 0.35)
+		rating = math.Pow(blockDist, 0.5) * math.Pow(rating, 0.40)
 
 		if _, ok := resampledSounds[id]; ok {
 			rating = math.Pow(rating, 1 / 4.0)

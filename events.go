@@ -25,6 +25,7 @@ const SequenceFavorited = "SequenceFavorited(bytes32,address,uint32)"
 const SequenceUnfavorited = "SequenceUnfavorited(bytes32,address,uint32)"
 const NewAnnotation = "NewAnnotation(bytes32,bytes32,bytes32,address)"
 const NewPack = "NewPack(address,bytes32,bytes32,bytes32)"
+const PackHasContent = "PackHasContent(bytes32,bytes32)"
 const UserLeftGuild = "UserLeftGuild(uint256,address)"
     
 // have max 2 keys to index on - so that they can do sub-sorting based on the other key
@@ -53,4 +54,5 @@ var TableIndices = map[string][]string {
 	NewAnnotation: []string{"data", "annotationType"},
 	NewPack: []string{"packHash", "user"},
 	UserLeftGuild: []string{"user", "guildId"},
+	PackHasContent: []string{"contentHash", "packHash"},
 }

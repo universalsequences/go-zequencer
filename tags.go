@@ -87,7 +87,7 @@ func getSoundsWithOrTags(caches *Caches, tags []interface{}, guildIds []interfac
 				ValueList: tags,
 			},
 			WhereClause{
-				Name: "guilId",
+				Name: "guildId",
 				ValueList: guildIds,
 			}},
 		FromBlockNumber: 1,

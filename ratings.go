@@ -20,7 +20,7 @@ type RatingResults struct {
 }
 
 const xanaduContract = "0x305306F68D9C230B59d5B6869AEd1723365C9290";
-const event = "NewAnnotation(bytes32,bytes32,bytes32,address)"
+const NewAnnotationn = "NewAnnotation(bytes32,bytes32,bytes32,address)"
 const annotationType = "SAMPLE_RATED"
 
 func HandleRatingsQuery(
@@ -57,7 +57,7 @@ func LoadRatings(caches Caches) RatingCache {
 	count := make(map[string]int)
 	cache := make(RatingCache)
 
-	rows := caches[xanaduContract][event]["blockNumber"]
+	rows := caches[xanaduContract][NewAnnotation]["blockNumber"]
 	for _, row := range rows {
 		if _, ok := row["annotationType"].(string); ok {
 			if (row["annotationType"].(string) == annotationType) {
@@ -91,9 +91,9 @@ func getRatings(cache *RatingCache, ids []string) map[string]int {
 	return ratings
 }
 
-func getSoundsWithRating(caches *Caches, rating int, user string) map[string]bool {
+func getSoundsWithRating(caches *Caches, rating int, user string, soundIds []interface{}) map[string]bool {
 	query := NewQuery(XANADU)
-	query.From(event)
+	query.From(NewAnnotation)
 	query.Select("data")
 	query.Select("annotationData")
 	query.WhereIs("annotationType", "SAMPLE_RATED")
@@ -101,7 +101,11 @@ func getSoundsWithRating(caches *Caches, rating int, user string) map[string]boo
 	if (user != "") {
 		query.WhereIs("address", strings.ToLower(user))
 	}
+	if (len(soundIds) > 0) {
+		query.WhereIn("data", soundIds)
+	}
 
+	//query.Debug = true
 	cache := (*caches)[XANADU] 
 	results := queryForCache(cache, query)
 

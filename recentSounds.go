@@ -22,6 +22,9 @@ func getRecentSounds(
 	for _, guildId := range guildIds {
 		guildList = append(guildList, guildId);
 	}
+	if (len(guildList) == 0) {
+		guildList = append(guildList, 0.0)
+	}
 
 	if (searchTerm != "") {
 		// then we need to search for tags
@@ -50,15 +53,14 @@ func getRecentSounds(
 
 	if (filterFavorites) {
 		// NEEDS TO INCLUDE USER OR THIS DOESNT MAKE SENSE
-		favoritedSounds := getSoundsWithRating(caches, 5, user)
-		if (len(soundIds) == 0) {
-			for id, _ := range favoritedSounds {
-				soundIds = append(
-					soundIds,
-					id)
-			}
-		} else {
+		favoritedSounds := getSoundsWithRating(caches, 5, user, soundIds)
+		sounds := []interface{}{}
+		for id, _ := range favoritedSounds {
+			sounds = append(
+				sounds,
+				id)
 		}
+		soundIds = sounds
 	}
 
 	query := NewQuery(GUILD_SAMPLES)
@@ -160,4 +162,14 @@ func getSoundsWithYear(caches *Caches, year float64, guildIds []interface{}) []i
 		ids = append(ids, result["ipfsHash"])
 	}
 	return ids
+}
+
+func filterByList(a []interface{}, bMap map[string]bool) []interface{} {
+	filtered := []interface{}{}
+	for _, val := range a {
+		if _, ok := bMap[val.(string)]; ok {
+			filtered = append(filtered, val)
+		}
+	}
+	return filtered
 }

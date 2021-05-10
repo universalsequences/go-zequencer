@@ -93,17 +93,20 @@ func HandleSearchQuery(
 	query := SearchQuery{}
 	json.Unmarshal([]byte(bodyString), &query)
 	start := query.Start
+	size := query.Size
 	tag := query.Tag
 	searchTerm := query.SearchTerm
 	groupBy := query.GroupBy
 	query.Start = 0
+	query.Size = 0
 	query.Tag = ""
 	isLazy := !query.FilterFavorites && tag == "" && searchTerm == "" && groupBy == "tag" && query.ReleaseId == 0 && query.VideoId == "" && query.Pack == "";
 	
-
 	// unpaginated queryr
 	unpaginatedQueryBytes, _ := json.Marshal(query)
 	unpaginatedQueryString := string(unpaginatedQueryBytes)
+
+	query.Size = size
 
 	if unpaginatedResults, ok := cachedQueries.getQuery(unpaginatedQueryString); ok {
 		paginated := []BlockResults{}
@@ -121,8 +124,7 @@ func HandleSearchQuery(
 	} 
 
 	unpaginatedResults := runQuery(caches, ratingsCache, query)
-	fmt.Printf("unpaginated =%v\n", unpaginatedResults)
-	
+
 	cachedQueries.newQuery(unpaginatedQueryString, unpaginatedResults)
 
 	paginatedResults := paginate(start, unpaginatedResults, query.Size)
@@ -186,15 +188,11 @@ func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []Bl
 		query.VideoId,
 		query.Pack,
 		query.User)
-	fmt.Printf("Recent sounds = %v\n", len(recentSounds))
 	recentDiscogs := getRecentDiscogs(caches, recentSounds)
 	recentArtists := getRecentArtists(caches, recentSounds)
 	recentReleases := getRecentReleases(caches, recentDiscogs)
 	recentYoutubes := getRecentYoutubeSamples(caches, recentSounds)
 	recentTags := getRecentTags(caches, recentSounds)
-	fmt.Printf("Recent taggs = %v\n", len(recentTags))
-	fmt.Printf("Recent discogs = %v\n", len(recentDiscogs))
-	fmt.Printf("Recent releases = %v\n", len(recentReleases))
 	ratings := getRatings(ratingsCache, getSampleIds(recentSounds))
 	// usedIn := getUsedIn(caches, recentSounds);
 	sounds := combineAll(recentSounds, recentDiscogs, recentYoutubes, recentTags, ratings, recentReleases, recentArtists);
@@ -212,7 +210,6 @@ func runQuery(caches *Caches, ratingsCache *RatingCache, query SearchQuery) []Bl
 	} else {
 		results = partitionBySource(getByDay(sounds), query.SearchTerm, false)
 	}
-	fmt.Printf("full results=%v\n", results)
 	return results;
 }
 
@@ -244,6 +241,7 @@ func combineAll(
 			Tags: tags[result.IpfsHash],
 			Rating: ratings[result.IpfsHash],
 			User: result.User,
+			GuildId: result.GuildId,
 		};
 	}
 
@@ -420,7 +418,6 @@ func getByDay(results []SampleResult) []BlockResults{
 };
 
 func partitionBySource(byDay [] BlockResults, searchTerm string, keepTags bool) []BlockResults {
-	fmt.Printf("Keep tags=%v\n", keepTags)
 	partitioned := []BlockResults{}
 	for _, toPartition := range byDay {
 		results := toPartition.Results;

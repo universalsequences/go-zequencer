@@ -23,6 +23,7 @@ type SampleQueryResults struct {
 	Year float64 `json:"year"`
 	User string `json:"user"`
 	BlockNumber float64 `json:"blockNumber"`
+	Packs []string `json:"packs"`
 }
 
 func HandleSampleQuery(
@@ -84,6 +85,7 @@ func HandleSampleQuery(
 	coverArtResults := queryForCache((*caches)[GUILD_SAMPLES], coverArtQuery)
 	videoResults := queryForCache((*caches)[GUILD_SAMPLES], videoQuery)
 	yearResults := queryForCache((*caches)[GUILD_SAMPLES], yearQuery)
+	packResults := getPacksWithSound(caches, query.Id)
 
 	if (len(tagResults) >= 1) {
 		for _, s := range tagResults {
@@ -95,6 +97,8 @@ func HandleSampleQuery(
 		sampleData.Title = titleResults[0]["title"].(string);
 		sampleData.User = titleResults[0]["user"].(string);
 		sampleData.BlockNumber = titleResults[0]["blockNumber"].(float64);
+		sampleData.Packs = packResults
+
 		if guildId, ok := titleResults[0]["guildId"].(float64); ok {
 			sampleData.GuildId = guildId
 		} else {

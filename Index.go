@@ -51,6 +51,8 @@ func SortByKey(cache EventCache, key string, secondaryKey string) EventCache {
 					strings.Compare(
 						sorted[i][key].(string),
 						sorted[j][key].(string)))
+			} else {
+				primaryLess = 1
 			}
 		} else if _, ok := sorted[i][key].(float64); ok {
 			if _, ok := sorted[j][key].(float64); ok {
@@ -64,10 +66,14 @@ func SortByKey(cache EventCache, key string, secondaryKey string) EventCache {
 					strings.Compare(
 						sorted[i][secondaryKey].(string),
 						sorted[j][secondaryKey].(string)))
+			} else {
+				secondaryLess = 1
 			}
 		} else if _, ok := sorted[i][secondaryKey].(float64); ok {
 			if _, ok := sorted[j][secondaryKey].(float64); ok {
 				secondaryLess = sorted[i][secondaryKey].(float64) - sorted[j][secondaryKey].(float64)
+			} else {
+				secondaryLess = 1
 			}
 		} 
 		if (primaryLess < 0) {

@@ -56,6 +56,11 @@ func queryForCache(cache Cache, query Query) [] map[string]interface{} {
 	lastResults := map[string][] map[string]interface{}{}
 	
 	for _, whereClause := range query.WhereClauses {
+		// loop through each where clause (which are sorted by how important their key
+		// is)
+		if (query.Debug) {
+			fmt.Printf("Looping through where clause =%+v\n", whereClause)
+		}
 		valueList:= whereClause.ValueList
 		valueList = append(valueList, whereClause.Value)
 		currentResults := map[string][] map[string]interface{}{}
@@ -67,9 +72,9 @@ func queryForCache(cache Cache, query Query) [] map[string]interface{} {
 			}
 			for _, valueResults := range lastResults {
 				if (query.Debug) {
-					fmt.Printf("Search by key for where.name=%v valueList=%v\n", whereClause.Name, valueList)
+					// fmt.Printf("Search by key=%v for where.name=%v valueList=%v lenResults=%v\n", key, whereClause.Name, valueList, len(valueResults))
 				}
-				currentResults = searchByKey(valueResults, whereClause.Name, valueList)
+				currentResults = searchByKey(valueResults, whereClause.Name, valueList, query.Debug)
 			}
 		} else {
 			// this where clause is NOT indexed
@@ -83,7 +88,7 @@ func queryForCache(cache Cache, query Query) [] map[string]interface{} {
 		}
 
 		if (query.Debug) {
-			fmt.Printf("Partitioned results for where %v = %v\n", whereClause.Name, currentResults)
+			fmt.Printf("Partitioned results for where %v\n", whereClause.Name)
 		}
 		lastResults = currentResults
 	}
@@ -137,7 +142,7 @@ func sortWhereClausesByIndex(query Query) {
 
 // return results partitioned by the values in the value list
 // Ex: for where guildId in [1,2,3] return results for partitioned by 1, 2, 3
-func searchByKey(rows []map[string]interface{}, name string, valueList []interface{}) map[string][]map[string]interface{} {
+func searchByKey(rows []map[string]interface{}, name string, valueList []interface{}, debug bool) map[string][]map[string]interface{} {
 	results := map[string][]map[string]interface{}{}
 	for _, value := range valueList {
 		x := sort.Search(len(rows), func (i int) bool {
@@ -150,7 +155,13 @@ func searchByKey(rows []map[string]interface{}, name string, valueList []interfa
 			}
 		});
 		valueResults := []map[string]interface{}{}
+		if (debug && len(rows) > 0) {
+			//fmt.Printf("search found x=%v\n", x)
+		}
 		for i := x; i < len(rows); i++ {
+			if (debug) {
+				//fmt.Printf("i=%v row[%v][%v] = %+v\n", i, i, name, rows[i])
+			}
 			if rows[i][name] == value {
 				valueResults = append(valueResults, rows[i])
 			} else {

@@ -21,7 +21,9 @@ func getRecentReleases(caches *Caches, recentDiscogs []SampleResult) map[string]
 	releases := getReleases(caches, discogsIds)
 	results := map[string]Release{}
 	for _, result := range recentDiscogs {
-		results[result.IpfsHash] = releases[result.DiscogsId]
+		if release, ok := releases[result.DiscogsId]; ok {
+			results[result.IpfsHash] = release
+		}
 	}
 
 	return results

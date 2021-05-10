@@ -147,11 +147,19 @@ func searchByKey(rows []map[string]interface{}, name string, valueList []interfa
 	for _, value := range valueList {
 		x := sort.Search(len(rows), func (i int) bool {
 			if _, ok := value.(string); ok {
-				return strings.Compare(rows[i][name].(string), value.(string)) >= 0;
+				if _, ok2 := rows[i][name].(string); ok2 {
+					return strings.Compare(rows[i][name].(string), value.(string)) >= 0;
+				} else {
+					return false;
+				}
 			} else if _, ok := value.(float64); ok {
-				return rows[i][name].(float64) >= value.(float64)
+				if _, ok2 := rows[i][name].(float64); ok2 {
+					return rows[i][name].(float64) >= value.(float64)
+				} else {
+					return false
+				}
 			} else {
-				return false;
+				return false
 			}
 		});
 		valueResults := []map[string]interface{}{}

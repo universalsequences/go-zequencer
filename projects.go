@@ -145,8 +145,7 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 			result)
 	}
 
-	return filtered
-	//return collapseProjects(filtered) //collapseProjects(convertToProjects(filtered))
+	return collapseProjects(filtered) //collapseProjects(convertToProjects(filtered))
 }
 
 func convertToProjects(

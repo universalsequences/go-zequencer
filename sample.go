@@ -11,6 +11,7 @@ const GUILD_SAMPLES = "0xc77d4e72dF7D0Bf96488eF543253af537fEb8737";
 
 type SampleQuery struct {
 	Id string `json:"id"`
+	User string `json:"user"`
 }
 
 type SampleQueryResults struct {
@@ -24,6 +25,7 @@ type SampleQueryResults struct {
 	User string `json:"user"`
 	BlockNumber float64 `json:"blockNumber"`
 	Packs []string `json:"packs"`
+	Rating int `json:"rating"`
 }
 
 func HandleSampleQuery(
@@ -40,9 +42,13 @@ func HandleSampleQuery(
 	bodyString := string(bodyBytes)
 	query := SampleQuery{}
 	json.Unmarshal([]byte(bodyString), &query)
+	sampleData := GetSampleInformation(caches, query.Id, query.User)
+	bytes, err := json.Marshal(sampleData)
+	w.Write(bytes)
+}
 
-	whereClause := WhereClause{Name: "ipfsHash", Value: query.Id};
-
+func GetSampleInformation(caches *Caches, id string, user string) SampleQueryResults {
+	whereClause := WhereClause{Name: "ipfsHash", Value: id};
 	tagsQuery := Query{
 		Address: GUILD_SAMPLES,
 		EventLog: "SampleTagged(bytes32,bytes32,uint32)",
@@ -61,7 +67,7 @@ func HandleSampleQuery(
 		Address: GUILD_SAMPLES,
 		EventLog: "NewDiscogsSample(bytes32,uint256,bytes32,uint32)",
 		SelectStatements: []string{"coverArtHash", "discogsId"},
-		WhereClauses: []WhereClause{WhereClause{Name: "sampleHash", Value: query.Id}},
+		WhereClauses: []WhereClause{WhereClause{Name: "sampleHash", Value: id}},
 		LimitSize: 1}
 
 	titleQuery := Query{
@@ -85,7 +91,7 @@ func HandleSampleQuery(
 	coverArtResults := queryForCache((*caches)[GUILD_SAMPLES], coverArtQuery)
 	videoResults := queryForCache((*caches)[GUILD_SAMPLES], videoQuery)
 	yearResults := queryForCache((*caches)[GUILD_SAMPLES], yearQuery)
-	packResults := getPacksWithSound(caches, query.Id)
+	packResults := getPacksWithSound(caches, id)
 
 	if (len(tagResults) >= 1) {
 		for _, s := range tagResults {
@@ -121,10 +127,11 @@ func HandleSampleQuery(
 		if (coverArtResults[0]["discogsId"] != nil) {
 			sampleData.DiscogsId = coverArtResults[0]["discogsId"].(float64);
 		}
+
+		sampleData.Rating = getRatingForSound(caches, user, id)
 	}
 
-	bytes, err := json.Marshal(sampleData)
-	w.Write(bytes)
+	return sampleData
 }
 
 	

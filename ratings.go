@@ -91,6 +91,26 @@ func getRatings(cache *RatingCache, ids []string) map[string]int {
 	return ratings
 }
 
+func getRatingForSound(caches *Caches, user string, soundId interface{}) int {
+	query := NewQuery(XANADU)
+	query.From(NewAnnotation)
+	query.Select("data")
+	query.Select("annotationData")
+	query.WhereIs("annotationType", "SAMPLE_RATED")
+	if (user != "") {
+		query.WhereIs("address", strings.ToLower(user))
+	}
+	query.WhereIs("data", soundId)
+	results := query.ExecuteQuery(caches)
+	if (len(results) > 0) {
+		row := results[0]
+		if rating, err := strconv.Atoi(row["annotationData"].(string)); err == nil {
+			return rating
+		}
+	}
+	return 0
+}
+
 func getSoundsWithRating(caches *Caches, rating int, user string, soundIds []interface{}) map[string]bool {
 	query := NewQuery(XANADU)
 	query.From(NewAnnotation)

@@ -45,6 +45,10 @@ func main() {
 		HandleProjectEdits(w, r, &caches)
 	})
 
+	http.HandleFunc("/packSearch", func(w http.ResponseWriter, r *http.Request) {
+		HandlePackQuery(w, r, &caches)
+	})
+
 	http.HandleFunc("/reload", func(w http.ResponseWriter, r *http.Request) {
 		HandleReloadRequest(
 			w,

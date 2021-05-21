@@ -1,6 +1,8 @@
 package main
 
 import (
+	"sort"
+	"fmt"
 	"encoding/hex"
 	"io/ioutil"
 	"log"
@@ -204,31 +206,56 @@ func getPacksWithSound(caches *Caches, soundId string) []string {
 	return getPackNames(caches, pruneOldPacks(caches, packIds))
 }
 
+func findRoots(packs []map[string]interface{}) map[string][]map[string]interface{} {
+	roots := map[string][]map[string]interface{}{}
+	for _, pack := range packs {
+		root := findRoot(pack["packHash"].(string), packs)
+		roots[root] = append(roots[root], pack)
+	}
+	return roots
+}
+
+func findRoot(packHash string, packs []map[string]interface{}) string {
+	toPrevious := map[string]string{}
+	for _, result := range packs {
+		if result["previousHash"] != nil {
+			toPrevious[result["packHash"].(string)] = result["previousHash"].(string)
+		}
+	}
+	return findRootRecursively(packHash, toPrevious)
+}
+
+func findRootRecursively(packHash string, toPrevious map[string]string) string {
+	if _, ok := toPrevious[packHash]; !ok {
+		return packHash
+	}
+	if toPrevious[packHash] == packHash {
+		return packHash
+	}
+	return findRootRecursively(toPrevious[packHash], toPrevious);
+}
+
 func pruneOldPacks(caches *Caches, packHashes[] interface{}) []string {
 	query := NewQuery(PACKS_CONTRACT)
 	query.From(NewPack)
 	query.Select("packHash")
 	query.WhereIn("packHash", packHashes)
 	results := query.ExecuteQuery(caches)
-	oldHashes := map[string]bool{}
-	for _, result := range results {
-		if (result["packHash"] != result["previousHash"] &&
-			result["previousHash"] != nil) {
-			oldHashes[result["previousHash"].(string)] = true
-		}
+	roots := findRoots(results)
+
+	list := []string{}
+	for _, results := range roots {
+		sort.Sort(ByBlockNumber(results))
+		list = append(list, results[0]["packHash"].(string))
 	}
 
-	pruned := []string{}
-	for _, hash := range packHashes {
-		if _, ok := oldHashes[hash.(string)]; !ok {
-			pruned = append(
-				pruned,
-				hash.(string))
-		}
-	}
-
-	return pruned
+	return list
 }
+
+type ByBlockNumber []map[string]interface{}
+func (a ByBlockNumber) Len() int           { return len(a) }
+func (a ByBlockNumber) Less(i, j int) bool { return a[i]["blockNumber"].(float64) > a[j]["blockNumber"].(float64) }
+func (a ByBlockNumber) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
 
 func getPackNames(caches *Caches, packHashes[] string) []string {

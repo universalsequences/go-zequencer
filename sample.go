@@ -11,10 +11,12 @@ const GUILD_SAMPLES = "0xc77d4e72dF7D0Bf96488eF543253af537fEb8737";
 
 type SampleQuery struct {
 	Id string `json:"id"`
+	Ids []string `json:"ids"`
 	User string `json:"user"`
 }
 
 type SampleQueryResults struct {
+	Id string `json:"id"`
 	Title string `json:"title"`
 	Tags []string `json:"tags"`
 	VideoId string `json:"videoId"`
@@ -42,9 +44,19 @@ func HandleSampleQuery(
 	bodyString := string(bodyBytes)
 	query := SampleQuery{}
 	json.Unmarshal([]byte(bodyString), &query)
-	sampleData := GetSampleInformation(caches, query.Id, query.User)
-	bytes, err := json.Marshal(sampleData)
-	w.Write(bytes)
+	if (len(query.Ids) > 0) {
+		data := [] SampleQueryResults{}
+		for _, id := range query.Ids {
+			data = append(
+				data, GetSampleInformation(caches, id, query.User))
+		}
+		bytes, _ := json.Marshal(data)
+		w.Write(bytes)
+	} else {
+		sampleData := GetSampleInformation(caches, query.Id, query.User)
+		bytes, _ := json.Marshal(sampleData)
+		w.Write(bytes)
+	}
 }
 
 func GetSampleInformation(caches *Caches, id string, user string) SampleQueryResults {
@@ -98,6 +110,8 @@ func GetSampleInformation(caches *Caches, id string, user string) SampleQueryRes
 			sampleData.Tags = append(sampleData.Tags,  s["tag"].(string));
 		}
 	}
+
+	sampleData.Id = id
 
 	if (len(titleResults) >= 1) {
 		sampleData.Title = titleResults[0]["title"].(string);

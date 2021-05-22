@@ -49,6 +49,10 @@ func main() {
 		HandlePackQuery(w, r, &caches)
 	})
 
+	http.HandleFunc("/presetSearch", func(w http.ResponseWriter, r *http.Request) {
+		HandlePresetQuery(w, r, &caches)
+	})
+
 	http.HandleFunc("/reload", func(w http.ResponseWriter, r *http.Request) {
 		HandleReloadRequest(
 			w,

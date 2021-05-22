@@ -53,7 +53,7 @@ func getRecentSounds(
 
 	if (filterFavorites) {
 		// NEEDS TO INCLUDE USER OR THIS DOESNT MAKE SENSE
-		favoritedSounds := getSoundsWithRating(caches, 5, user, soundIds)
+		favoritedSounds := getSoundsWithRating(caches, 5, user, soundIds, "SOUND_RATED")
 		sounds := []interface{}{}
 		for id, _ := range favoritedSounds {
 			sounds = append(

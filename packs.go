@@ -11,7 +11,6 @@ import (
 	"net/http"
 )
 
-const PRESETS_CONTRACT = "0x45aC8aCbEba84071D4e549d4dCd273E01E5a8daF";
 const PACKS_CONTRACT = "0xF7bd2ada59c4ab5AD0f6BFbE94EB4f8eCa18eEDd";
 
 type PackQuery struct {
@@ -276,5 +275,24 @@ func getPackNames(caches *Caches, packHashes[] string) []string {
 	}
 	return titles
 }
+
+func getPackNamesMap(caches *Caches, packHashes[] string) map[string]string {
+	packs := []interface{}{}
+	for _, pack := range packHashes {
+		packs = append(
+			packs, pack)
+	}
+	query := NewQuery(PACKS_CONTRACT)
+	query.From(NewPack)
+	query.Select("title")
+	query.WhereIn("packHash", packs)
+	results := query.ExecuteQuery(caches)
+	titles := map[string]string{}
+	for _, result := range results {
+		titles[result["packHash"].(string)] = result["title"].(string)
+	}
+	return titles
+}
+
 
 

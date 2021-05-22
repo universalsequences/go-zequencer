@@ -40,7 +40,7 @@ var TableIndices = map[string][]string {
 	SampleInSequence: []string{"sequenceHash", "sampleHash"},
 	SequenceEdited: []string{"newSequence", "previousSequence"},
 	NewPreset: []string{"guildId","contentHash","user"},
-	PresetInstrumentType: []string{"contentHash","instrumentType"},
+	PresetInstrumentType: []string{"instrumentType", "contentHash"},
 	PresetTagged: []string{"tag","contentHash"},
 	GuildKeyEncrypted: []string{"guildId","user"},
 	NewEncryptedContent: []string{"newContent","blockNumber"},

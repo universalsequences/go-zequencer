@@ -111,12 +111,12 @@ func getRatingForSound(caches *Caches, user string, soundId interface{}) int {
 	return 0
 }
 
-func getSoundsWithRating(caches *Caches, rating int, user string, soundIds []interface{}) map[string]bool {
+func getSoundsWithRating(caches *Caches, rating int, user string, soundIds []interface{}, annotationType string) map[string]bool {
 	query := NewQuery(XANADU)
 	query.From(NewAnnotation)
 	query.Select("data")
 	query.Select("annotationData")
-	query.WhereIs("annotationType", "SAMPLE_RATED")
+	query.WhereIs("annotationType", annotationType)
 	query.WhereIs("annotationData", "5")
 	if (user != "") {
 		query.WhereIs("address", strings.ToLower(user))

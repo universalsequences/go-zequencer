@@ -22,8 +22,7 @@ func getRecentDiscogs(caches *Caches, recentSounds []SampleResult) []SampleResul
 		FromBlockNumber: 1,
 	};
 
-	cache := (*caches)[GUILD_SAMPLES] 
-	results := queryForCache(cache, query)
+	results := query.ExecuteQuery(caches)
 	convertedResults := []SampleResult{}
 	for _, result := range results {
 		coverArtHash, err := result["coverArtHash"].(string)

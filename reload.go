@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -38,7 +39,7 @@ func HandleReloadRequest(
 
 	for _, contract := range query.Changes {
 		fmt.Printf("Reloading contract=%v\n", contract)
-		(*caches)[contract] = LoadCache(directoryPath + contract + ".json")
+		(*caches)[strings.ToLower(contract)] = LoadCache(directoryPath + contract + ".json")
 
 		// certain contracts getting updated should result in clearing the cache
 		// since the results may have changed

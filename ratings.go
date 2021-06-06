@@ -57,7 +57,7 @@ func LoadRatings(caches Caches) RatingCache {
 	count := make(map[string]int)
 	cache := make(RatingCache)
 
-	rows := caches[xanaduContract][NewAnnotation]["blockNumber"]
+	rows := caches[strings.ToLower(xanaduContract)][NewAnnotation]["blockNumber"]
 	for _, row := range rows {
 		if _, ok := row["annotationType"].(string); ok {
 			if (row["annotationType"].(string) == annotationType) {
@@ -126,8 +126,7 @@ func getSoundsWithRating(caches *Caches, rating int, user string, soundIds []int
 	}
 
 	//query.Debug = true
-	cache := (*caches)[XANADU] 
-	results := queryForCache(cache, query)
+	results := query.ExecuteQuery(caches)
 
 	ids := map[string]bool{}
 	for _, result := range results {

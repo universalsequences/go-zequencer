@@ -48,8 +48,7 @@ func getReleases(caches *Caches, discogsIds []interface{}) map[float64]Release {
 				}},
 		};
 	
-	cache := (*caches)[ARTISTS_CONTRACT] 
-	results := queryForCache(cache, query)
+	results := query.ExecuteQuery(caches)
 	ret := map[float64]Release{}
 	for _, result := range results {
 		releaseId := result["releaseId"].(float64)
@@ -75,7 +74,7 @@ func getRecentArtists(caches *Caches, sounds []SampleResult) map[string]string {
 	query.Select("artistName")
 	query.Select("ipfsHash")
 	query.WhereIn("ipfsHash", ids)
-	results := queryForCache((*caches)[ARTISTS_CONTRACT], query)
+	results := query.ExecuteQuery(caches)
 
 	artists := map[string]string{}
 	for _, result := range results {
@@ -91,7 +90,7 @@ func getSamplesFromRelease(caches *Caches, releaseId float64, guildIds []interfa
 	query.Select("sampleHash")
 	query.WhereIs("discogsId", releaseId)
 	query.WhereIn("guildId", guildIds)
-	results := queryForCache((*caches)[GUILD_SAMPLES], query)
+	results := query.ExecuteQuery(caches)
 
 	soundIds := [] interface {}{}
 	for _, result := range results {

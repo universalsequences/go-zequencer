@@ -98,11 +98,11 @@ func GetSampleInformation(caches *Caches, id string, user string) SampleQueryRes
 
 	sampleData := SampleQueryResults{}
 
-	tagResults := queryForCache((*caches)[GUILD_SAMPLES], tagsQuery)
-	titleResults := queryForCache((*caches)[GUILD_SAMPLES], titleQuery)
-	coverArtResults := queryForCache((*caches)[GUILD_SAMPLES], coverArtQuery)
-	videoResults := queryForCache((*caches)[GUILD_SAMPLES], videoQuery)
-	yearResults := queryForCache((*caches)[GUILD_SAMPLES], yearQuery)
+	tagResults := tagsQuery.ExecuteQuery(caches)
+	titleResults := titleQuery.ExecuteQuery(caches)
+	coverArtResults := coverArtQuery.ExecuteQuery(caches)
+	videoResults := videoQuery.ExecuteQuery(caches)
+	yearResults := yearQuery.ExecuteQuery(caches)
 	packResults := getPacksWithSound(caches, id)
 
 	if (len(tagResults) >= 1) {

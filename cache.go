@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"fmt"
 	"os"
 	"encoding/json"
@@ -22,7 +23,7 @@ func LoadAllCaches(directoryPath string) Caches {
 	caches := make(Caches)
 	for _, file := range files {
 		var contractAddress = file.Name()[0:len(file.Name())-len(".json")]
-		caches[contractAddress] = LoadCache(directoryPath + file.Name())
+		caches[strings.ToLower(contractAddress)] = LoadCache(directoryPath + file.Name())
 	}
 	return caches;
 }

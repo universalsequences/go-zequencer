@@ -21,8 +21,7 @@ func getRecentTags(caches *Caches, recentSounds []SampleResult) map[string][]str
 		FromBlockNumber: 1,
 	};
 
-	cache := (*caches)[GUILD_SAMPLES] 
-	results := queryForCache(cache, query)
+	results := query.ExecuteQuery(caches)
 
 	tags := map[string][]string{}
 
@@ -59,8 +58,7 @@ func getAllTags(caches *Caches) []string {
 		FromBlockNumber: 1,
 	};
 
-	cache := (*caches)[GUILD_SAMPLES] 
-	results := queryForCache(cache, query)
+	results := query.ExecuteQuery(caches)
 
 	tagsMap := map[string]bool{}
 	for _, result := range results {
@@ -93,8 +91,7 @@ func getSoundsWithOrTags(caches *Caches, tags []interface{}, guildIds []interfac
 		FromBlockNumber: 1,
 	};
 
-	cache := (*caches)[GUILD_SAMPLES] 
-	results := queryForCache(cache, query)
+	results := query.ExecuteQuery(caches)
 
 	ids := []interface{}{}
 	for _, result := range results {

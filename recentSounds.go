@@ -77,8 +77,7 @@ func getRecentSounds(
 		query.WhereIn("guildId",guildList)
 	}
 
-	cache := (*caches)[GUILD_SAMPLES] 
-	results := queryForCache(cache, query)
+	results := query.ExecuteQuery(caches)
 	if (filterByTitle) {
 		filtered := []map[string]interface{}{}
 		searchTerm = strings.ToLower(searchTerm)
@@ -154,8 +153,7 @@ func getSoundsWithYear(caches *Caches, year float64, guildIds []interface{}) []i
 		FromBlockNumber: 1,
 	};
 
-	cache := (*caches)[GUILD_SAMPLES] 
-	results := queryForCache(cache, query)
+	results := query.ExecuteQuery(caches)
 
 	ids := []interface{}{}
 	for _, result := range results {

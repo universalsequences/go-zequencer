@@ -43,7 +43,7 @@ var TableIndices = map[string][]string {
 	PresetInstrumentType: []string{"instrumentType", "contentHash"},
 	PresetTagged: []string{"tag","contentHash"},
 	GuildKeyEncrypted: []string{"guildId","user"},
-	NewEncryptedContent: []string{"newContent","blockNumber"},
+	NewEncryptedContent: []string{"newContent","user"},
 	NewGuildMemberRequestAccepted: []string{"newMember", "guildId"},
 	EncryptedContentShared: []string{"contentHash", "sharedWith"},
 	NewGuildSequence: []string{"guildId", "contentHash"},

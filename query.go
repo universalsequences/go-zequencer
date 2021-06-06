@@ -30,8 +30,9 @@ func HandleQuery(
 
 	query := Query{}
 	json.Unmarshal([]byte(bodyString), &query)
+	//	query.Debug = true
 	
-	results := queryForCache((*caches)[query.Address], query)
+	results := queryForCache((*caches)[strings.ToLower(query.Address)], query)
 	bytes, err := json.Marshal(results)
 	cachedQueries.newQuery(bodyString, bytes)
 
@@ -71,9 +72,6 @@ func queryForCache(cache Cache, query Query) [] map[string]interface{} {
 				empty = false
 			}
 			for _, valueResults := range lastResults {
-				if (query.Debug) {
-					// fmt.Printf("Search by key=%v for where.name=%v valueList=%v lenResults=%v\n", key, whereClause.Name, valueList, len(valueResults))
-				}
 				currentResults = searchByKey(valueResults, whereClause.Name, valueList, query.Debug)
 			}
 		} else {

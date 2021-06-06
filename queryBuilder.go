@@ -1,5 +1,9 @@
 package main
 
+import (
+	"strings"
+)
+
 type Query struct {
 	Address string `json:"address"`
 	EventLog string `json:"eventLog"`
@@ -57,6 +61,6 @@ func (q *Query) WhereIn(Name string, ValueList []interface{}) *Query {
 }
 
 func (q *Query) ExecuteQuery(caches *Caches) []map[string]interface{} {
-	cache := (*caches)[q.Address]
+	cache := (*caches)[strings.ToLower(q.Address)]
 	return queryForCache(cache, *q)
 }

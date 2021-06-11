@@ -1,3 +1,4 @@
+
 package main
 
 import (
@@ -21,6 +22,8 @@ type SampleQueryResults struct {
 	Tags []string `json:"tags"`
 	VideoId string `json:"videoId"`
 	CoverArtHash string `json:"coverArtHash"`
+	ArtistName string `json:"artistName"`
+	ReleaseName string `json:"releaseName"`
 	DiscogsId float64 `json:"discogsId"`
 	GuildId float64 `json:"guildId"`
 	Year float64 `json:"year"`
@@ -140,6 +143,14 @@ func GetSampleInformation(caches *Caches, id string, user string) SampleQueryRes
 		}
 		if (coverArtResults[0]["discogsId"] != nil) {
 			sampleData.DiscogsId = coverArtResults[0]["discogsId"].(float64);
+
+			discogIds := []interface{}{}
+			discogIds =  append(discogIds, sampleData.DiscogsId)
+			releases := getReleases(caches, discogIds)
+			if release, ok := releases[sampleData.DiscogsId]; ok {
+				sampleData.ReleaseName = release.ReleaseName
+				sampleData.ArtistName = release.ArtistName
+			}
 		}
 
 		sampleData.Rating = getRatingForSound(caches, user, id)

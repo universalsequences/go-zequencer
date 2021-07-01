@@ -69,5 +69,6 @@ func main() {
 		HandleTextQuery(w, r, &caches)
 	})
 	log.Fatal(http.ListenAndServe(":4567", nil))
+	runRepl(&caches)
 }
 

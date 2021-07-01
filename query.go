@@ -59,12 +59,10 @@ func queryForCache(cache Cache, query Query) [] map[string]interface{} {
 	for _, whereClause := range query.WhereClauses {
 		// loop through each where clause (which are sorted by how important their key
 		// is)
-		if (query.Debug) {
-			fmt.Printf("Looping through where clause =%+v\n", whereClause)
-		}
 		valueList:= whereClause.ValueList
 		valueList = append(valueList, whereClause.Value)
 		currentResults := map[string][] map[string]interface{}{}
+
 		if _, ok := cache[query.EventLog][whereClause.Name]; ok {
 			// this where clause is indexed
 			if (empty) {
@@ -87,6 +85,11 @@ func queryForCache(cache Cache, query Query) [] map[string]interface{} {
 
 		if (query.Debug) {
 			fmt.Printf("Partitioned results for where %v\n", whereClause.Name)
+			for key, res := range currentResults {
+				if len(res) > 0 {
+					fmt.Printf("Key=%v len=%v\n", key, len(res))
+				}
+			}
 		}
 		lastResults = currentResults
 	}
@@ -99,10 +102,6 @@ func queryForCache(cache Cache, query Query) [] map[string]interface{} {
 				results,
 				result);
 		}
-	}
-	if (query.Debug) {
-		fmt.Printf("Unioning the results %v\n", lastResults)
-		fmt.Printf("Union of the results %v\n", results)
 	}
 
 	if (empty) {
@@ -161,16 +160,19 @@ func searchByKey(rows []map[string]interface{}, name string, valueList []interfa
 			}
 		});
 		valueResults := []map[string]interface{}{}
-		if (debug && len(rows) > 0) {
-			//fmt.Printf("search found x=%v\n", x)
+		if (debug && name=="annotationType") {
+			fmt.Printf("search found x=%v\n", x)
 		}
 		for i := x; i < len(rows); i++ {
-			if (debug) {
-				//fmt.Printf("i=%v row[%v][%v] = %+v\n", i, i, name, rows[i])
+			if (debug && name=="annotationType") {
+				fmt.Printf("i=%v row[%v][%v] = %+v\n", i, i, name, rows[i][name])
 			}
 			if rows[i][name] == value {
 				valueResults = append(valueResults, rows[i])
-			} else {
+			} else if rows[i][name] != 0.0 {
+				if (debug && name=="annotationType") {
+					fmt.Println("STOPPING")
+				}
 				break
 			}
 		}

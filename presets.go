@@ -118,7 +118,7 @@ func runPresetQuery(caches *Caches, query PresetQuery) []map[string]interface{} 
 		}
 		results = append(results, row)	
 	}
-	return results
+	return pruneContent(results, "contentHash")
 }
 
 func getTagsForPresets(caches *Caches, contentHashes []interface{}) map[string][]string {

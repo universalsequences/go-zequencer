@@ -57,6 +57,8 @@ func SortByKey(cache EventCache, key string, secondaryKey string) EventCache {
 		} else if _, ok := sorted[i][key].(float64); ok {
 			if _, ok := sorted[j][key].(float64); ok {
 				primaryLess = sorted[i][key].(float64) - sorted[j][key].(float64)
+			} else {
+				primaryLess = 1
 			}
 		} 
 

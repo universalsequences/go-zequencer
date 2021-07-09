@@ -176,7 +176,7 @@ func getSoundsWithPack(caches *Caches, pack string, guildIds []interface{}) []in
 	query.Select("contentHash")
 	query.WhereIs("packHash", pack)
 	//query.WhereIn("guildId", guildIds)
-	results := query.ExecuteQuery(caches)
+	results := pruneContent(query.ExecuteQuery(caches), "contentHash")
 
 	soundIds := [] interface {}{}
 	for _, result := range results {

@@ -169,10 +169,7 @@ func searchByKey(rows []map[string]interface{}, name string, valueList []interfa
 			}
 			if rows[i][name] == value {
 				valueResults = append(valueResults, rows[i])
-			} else if rows[i][name] != 0.0 {
-				if (debug && name=="annotationType") {
-					fmt.Println("STOPPING")
-				}
+			} else {
 				break
 			}
 		}

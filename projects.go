@@ -76,7 +76,7 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 	results := []map[string]interface{}{}
 	for _, guildId := range query.GuildIds {
 		if (guildId == 0) {
-			results = queryBuilder.ExecuteQuery(caches)
+			results = pruneContent(queryBuilder.ExecuteQuery(caches), "newSequence")
 			break
 		}
 	}

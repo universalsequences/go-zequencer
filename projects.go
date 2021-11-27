@@ -8,7 +8,8 @@ import (
 	"net/http"
 )
 
-const TOKENIZED_SEQUENCES = "0x606f760c228cd5f11c6f79de64d3b299b11f1ed1"
+const OLD_TOKENIZED_SEQUENCES = "0x606f760c228cd5f11c6f79de64d3b299b11f1ed1"
+const TOKENIZED_SEQUENCES = "0x27Fd050dF7c0c603A407f1BC4fd0ED634824270E";
 
 type ProjectsQuery struct {
 	SearchTerm string `json:"searchTerm"`
@@ -18,6 +19,7 @@ type ProjectsQuery struct {
 	FilterMine bool `json:"filterMine"`
 	SearchTag string`json:"searchTag"`
 	GuildIds []float64 `json:"guildIds"`
+	Old bool `json:"old"`
 }
 
 type Project struct {
@@ -63,8 +65,16 @@ func HandleProjectsQuery(
 }
 
 func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
-	queryBuilder := NewQuery(TOKENIZED_SEQUENCES)
-	queryBuilder.From(SequenceEdited)
+	contract := TOKENIZED_SEQUENCES;
+	if (query.Old) {
+		contract = OLD_TOKENIZED_SEQUENCES;
+	}
+	queryBuilder := NewQuery(contract)
+	if (query.Old) {
+		queryBuilder.From(SequenceEditedOld)
+	} else {
+		queryBuilder.From(SequenceEdited)
+	}
 	queryBuilder.Select("previousSequence")
 	queryBuilder.Select("newSequence")
 	queryBuilder.Select("title")

@@ -15,6 +15,8 @@ type SamplesStreamQuery struct {
 	AndTags []string `json:"andTags"`
 	OrTags []string `json:"orTags"`
 	GuildIds []float64 `json:"guildIds"`
+	IsFavorited bool `json:"isFavorited"`
+	User string `json:"user"`
 }
 
 type SamplesStreamResults struct {
@@ -79,6 +81,21 @@ func runSamplesStreamQuery(
 		} 
 	} else {
 		sounds = getSamplesWithOrTags(caches, query.OrTags, query.GuildIds)
+	}
+
+	if (query.IsFavorited) {
+		soundsToRate := []interface{}{}
+		for _, id := range sounds {
+			soundsToRate = append(soundsToRate, id)
+		}
+		favoritedSounds := getSoundsWithRating(caches, 5, query.User, soundsToRate, "SAMPLE_RATED")
+		_sounds := []string{}
+		for id, _ := range favoritedSounds {
+			_sounds = append(
+				_sounds,
+				id)
+		}
+		sounds = _sounds
 	}
 
 	projectCount := getProjectCountForSamples(caches, sounds)

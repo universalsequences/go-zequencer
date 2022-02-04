@@ -153,8 +153,8 @@ func GetSampleInformation(caches *Caches, id string, user string) SampleQueryRes
 			}
 		}
 
-		sampleData.Rating = getRatingForSound(caches, user, id)
 	}
+	sampleData.Rating = getRatingForSound(caches, user, id)
 
 	return sampleData
 }

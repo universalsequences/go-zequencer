@@ -75,7 +75,7 @@ func runPresetQuery(caches *Caches, query PresetQuery) []map[string]interface{} 
 	tags := getTagsForPresets(caches, allContentHashes)
 	packs := getPacksForPresets(caches, allContentHashes)
 	favorites := getSoundsWithRating(caches, 5, query.User, allContentHashes, "PRESET_RATED")
-	
+
 	results := []map[string]interface{}{}
 	
 	for _, result := range rawResults {

@@ -79,6 +79,9 @@ func runPresetQuery(caches *Caches, query PresetQuery) []map[string]interface{} 
 	results := []map[string]interface{}{}
 	
 	for _, result := range rawResults {
+		if _, ok := result["encryptedName"].(string); !ok {
+			continue
+		}
 		row := map[string]interface{}{}
 		contentHash := result["contentHash"].(string)
 		hexTitle := result["encryptedName"].(string)

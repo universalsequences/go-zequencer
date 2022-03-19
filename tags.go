@@ -1,5 +1,9 @@
 package main
 
+import (
+	"sort"
+)
+
 func getRecentTags(caches *Caches, recentSounds []SampleResult) map[string][]string {
 	ids := []interface{}{}
 	for _, sound := range recentSounds {
@@ -47,6 +51,11 @@ func containsTag(tags []string, tag string) bool {
 	return false
 }
 
+type SampleTag struct {
+	Tag string
+	Count int
+}
+
 func getAllTags(caches *Caches) []string {
 	query := Query{
 		Address: GUILD_SAMPLES,
@@ -60,15 +69,30 @@ func getAllTags(caches *Caches) []string {
 
 	results := query.ExecuteQuery(caches)
 
-	tagsMap := map[string]bool{}
+	tagsMap := map[string]int{}
 	for _, result := range results {
-		tagsMap[ result["tag"].(string)] = true
-	}
-	tags := []string{}
-	for tag, _ := range tagsMap  {
-		tags = append(tags, tag)
+		if _, ok := tagsMap[result["tag"].(string)]; !ok {
+			tagsMap[ result["tag"].(string)] = 0
+		}
+		tagsMap[ result["tag"].(string)]++
 	}
 
+	sampleTags:= []SampleTag{}
+	for tag, count := range tagsMap  {
+		sampleTags = append(sampleTags, SampleTag{
+			Tag: tag,
+			Count: count,
+		})
+	}
+
+	sort.Sort(BySampleTag(sampleTags))
+
+	tags := []string{}
+	for _, sampleTag := range sampleTags {
+		tags = append(
+			tags,
+			sampleTag.Tag)
+	}
 	return tags
 }
 
@@ -99,3 +123,9 @@ func getSoundsWithOrTags(caches *Caches, tags []interface{}, guildIds []interfac
 	}
 	return ids
 }
+
+type BySampleTag []SampleTag
+func (a BySampleTag) Len() int           { return len(a) }
+func (a BySampleTag) Less(i, j int) bool { return a[i].Count > a[j].Count }
+func (a BySampleTag) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+

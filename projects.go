@@ -34,6 +34,7 @@ type Project struct {
 	EncryptedContentKey string `json:"encryptedContentKey"`
 	GuildId float64 `json:"guildId"`
 	Collaborators []string `json:"collaborators"`
+	BPM float64 `json:"bpm"`
 }
 
 
@@ -177,6 +178,7 @@ func convertToProjects(
 				PreviousSequence: previousSequence,
 				Title: result["title"].(string),
 				BlockNumber: result["blockNumber"].(float64),
+				BPM: result["bpm"].(float64),
 			})
 	}
 	return projects
@@ -194,8 +196,11 @@ func collapseProjects(projects []Project) []Project {
 		if _, ok := idToProject[project.PreviousSequence]; ok {
 			// this project has a previous sequence so map
 			// previous -> next
-			projectToNext[project.PreviousSequence] = project.NewSequence
+			if (project.PreviousSequence != project.NewSequence) {
+				projectToNext[project.PreviousSequence] = project.NewSequence
+			}
 		}
+
 	}
 
 	collapsed := []Project{}
@@ -209,6 +214,7 @@ func collapseProjects(projects []Project) []Project {
 			collapsed = append(
 				collapsed,
 				project)
+		} else {
 		}
 	}
 	return collapsed

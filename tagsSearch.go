@@ -1,6 +1,5 @@
 package main
 import (
-	"fmt"
 	"strings"
 	"encoding/json"
 	"io/ioutil"
@@ -32,7 +31,6 @@ func HandleTagQuery(
 	matchingTags := []string{}
 
 	text := strings.ToLower(query.Text)
-	fmt.Printf("TEXT search=%v\n", text)
 
 	for _, tag := range allTags {
 		if strings.Contains(strings.ToLower(tag), text) {

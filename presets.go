@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"fmt"
 	"io/ioutil"
 	"encoding/hex"
@@ -82,6 +83,18 @@ func runPresetQuery(caches *Caches, query PresetQuery) []map[string]interface{} 
 		if _, ok := result["encryptedName"].(string); !ok {
 			continue
 		}
+		if (query.SearchTerm != "") {
+			searchTerm := strings.ToLower(query.SearchTerm);
+			hexTitle := result["encryptedName"].(string)
+			decoded, err := hex.DecodeString(hexTitle)
+			if err == nil {
+				title := fmt.Sprintf("%s", decoded)
+				if (!strings.Contains(strings.ToLower(title), searchTerm)) {
+					continue
+				}
+			}
+		}
+
 		row := map[string]interface{}{}
 		contentHash := result["contentHash"].(string)
 		hexTitle := result["encryptedName"].(string)

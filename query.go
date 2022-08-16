@@ -98,9 +98,11 @@ func queryForCache(cache Cache, query Query) [] map[string]interface{} {
 	// now union all the last results
 	for _, r := range lastResults {
 		for _, result := range r {
-			results = append(
-				results,
-				result);
+			if result["blockNumber"].(float64) >= query.FromBlockNumber {
+				results = append(
+					results,
+					result);
+			}
 		}
 	}
 

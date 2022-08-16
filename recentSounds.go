@@ -5,6 +5,25 @@ import (
 	"sort"
 )
 
+func GetAllSounds(
+	caches *Caches,
+	guildIds []float64) []string {
+	g := make([]interface{}, len(guildIds))
+	for i, _ := range guildIds {
+		g[i] = guildIds[i]
+	}
+	query := NewQuery(GUILD_SAMPLES)
+	query.From(SampleCreated)
+	query.WhereIn("guildId", g)
+	results := query.ExecuteQuery(caches)
+	sounds := make([]string, len(results))
+	for i, result := range results {
+		sounds[i] = result["ipfsHash"].(string)
+	}
+	return sounds
+}
+
+
 func getRecentSounds(
 	caches *Caches,
 	searchTerm string,

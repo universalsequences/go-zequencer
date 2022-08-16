@@ -170,6 +170,10 @@ func convertToProjects(
 
 		id := result["newSequence"].(string)
 
+		bpm := 0.0
+		if val, ok := result["bpm"].(float64); ok {
+			bpm = val
+		}
 		projects = append(
 			projects,
 			Project{
@@ -178,7 +182,7 @@ func convertToProjects(
 				PreviousSequence: previousSequence,
 				Title: result["title"].(string),
 				BlockNumber: result["blockNumber"].(float64),
-				BPM: result["bpm"].(float64),
+				BPM: bpm,
 			})
 	}
 	return projects

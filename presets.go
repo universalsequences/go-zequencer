@@ -19,6 +19,7 @@ type PresetQuery struct {
 	GuildId float64 `json:"guildId"`
 	FilterFavorites bool `json:"filterFavorites"`
 	ContentHashes []string `json:"contentHashes"`
+	FromBlockNumber float64 `json:"fromBlockNumber"`
 }
 
 func HandlePresetQuery(
@@ -46,6 +47,7 @@ func runPresetQuery(caches *Caches, query PresetQuery) []map[string]interface{} 
 	instQuery := NewQuery(PRESETS_CONTRACT)
 	instQuery.From(PresetInstrumentType)
 	instQuery.WhereIs("instrumentType", query.InstrumentType);
+	instQuery.FromBlockNumber = query.FromBlockNumber;
 
 	if (len(query.ContentHashes) > 0) {
 		// filter by content hashes

@@ -25,6 +25,10 @@ func main() {
 		HandleTagQuery(w, r, &caches)
 	})
 
+	http.HandleFunc("/tagsRank", func(w http.ResponseWriter, r *http.Request) {
+		HandleTagsRankQuery(w, r, &caches)
+	})
+
 	http.HandleFunc("/ratings", func(w http.ResponseWriter, r *http.Request) {
 		HandleRatingsQuery(w, r, &ratings)
 	})

@@ -32,7 +32,7 @@ const UserLeftGuild = "UserLeftGuild(uint256,address)"
 // have max 2 keys to index on - so that they can do sub-sorting based on the other key
 var TableIndices = map[string][]string {
 	SampleCreated: []string{"guildId", "ipfsHash"},
-	SampleTagged: []string{"guildId", "ipfsHash"},
+	SampleTagged: []string{"tag", "ipfsHash"},
 	SampleYear: []string{"year", "ipfsHash"},
 	SampleYoutube: []string{"videoId", "ipfsHash"},
 	NewDiscogsSample: []string{"sampleHash", "discogsId"},

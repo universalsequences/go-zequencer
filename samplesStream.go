@@ -17,6 +17,9 @@ type SamplesStreamQuery struct {
 	GuildIds []float64 `json:"guildIds"`
 	IsFavorited bool `json:"isFavorited"`
 	User string `json:"user"`
+	ByDate bool `json:"byDate"`
+	StartYear float64 `json:"startYear"`
+	EndYear float64 `json:"endYear"`
 }
 
 type SamplesStreamResults struct {
@@ -26,6 +29,7 @@ type SamplesStreamResults struct {
 type RatedSound struct {
 	Id string
 	Rating float64 
+	BlockNumber float64
 }
 
 const PART_RATIO = 0.65
@@ -64,15 +68,23 @@ func runSamplesStreamQuery(
 	if val, ok := streamCache.getQuery(bodyString); ok {
 		sortedSounds := []string{}
 		json.Unmarshal(val, &sortedSounds)
-		return SamplesStreamResults{
-			Ids: shuffleInParts(sortedSounds),
+		if (query.ByDate) {
+			return SamplesStreamResults{
+				Ids: sortedSounds,
+			}
+		} else {
+			return SamplesStreamResults{
+				Ids: shuffleInParts(sortedSounds),
+			}
 		}
 	}
 
 	sounds := []string{}
-	if (len(query.OrTags) == 0) {
-		sounds = getSamplesWithAndTags(caches, query.AndTags, query.GuildIds)
-		if (len(sounds) < 3) {
+	if (len(query.OrTags) == 0 && len(query.AndTags) == 0) {
+		sounds = GetAllSounds(caches, query.GuildIds)
+	} else if (len(query.OrTags) == 0) {
+		sounds = GetSamplesWithAndTags(caches, query.AndTags, query.GuildIds)
+		if (len(sounds) <= 0) {
 			moreSounds := getSamplesWithOrTags(caches, query.AndTags, query.GuildIds)
 			for _, sound := range moreSounds {
 				sounds = append(
@@ -81,6 +93,10 @@ func runSamplesStreamQuery(
 		} 
 	} else {
 		sounds = getSamplesWithOrTags(caches, query.OrTags, query.GuildIds)
+	}
+
+	if (query.StartYear != 0) {
+		sounds = FilterSoundsByYears(caches, query.StartYear, query.EndYear, sounds)
 	}
 
 	if (query.IsFavorited) {
@@ -133,9 +149,14 @@ func runSamplesStreamQuery(
 			RatedSound{
 				Id: id,
 				Rating: rating,
+				BlockNumber: blockNumbers[id],
 			})
 	}
-	sort.Sort(ByRating(ratedSounds))
+	if (query.ByDate) {
+		sort.Sort(ByBlockNumbers(ratedSounds))
+	} else {
+		sort.Sort(ByRating(ratedSounds))
+	}
 
 	sortedSounds := []string{}
 	for _, ratedSound := range ratedSounds {
@@ -148,12 +169,18 @@ func runSamplesStreamQuery(
 	bytes, _  := json.Marshal(sortedSounds)
 	streamCache.newQuery(bodyString, bytes)
 
-	return SamplesStreamResults{
-		Ids: shuffleInParts(sortedSounds),
+	if (query.ByDate) {
+		return SamplesStreamResults{
+			Ids: sortedSounds,
+		}
+	} else {
+		return SamplesStreamResults{
+			Ids: shuffleInParts(sortedSounds),
+		}
 	}
 }
 
-func getSamplesWithAndTags(caches *Caches, tags []string, guildIds []float64) []string {
+func GetSamplesWithAndTags(caches *Caches, tags []string, guildIds []float64) []string {
 	sampleMap := map[string]bool{}
 
 	for i, tag := range tags {
@@ -254,6 +281,11 @@ func getSamplesWithOrTags(caches *Caches, tags []string, guildIds [] float64) []
 
 	return sounds
 }
+
+type ByBlockNumbers []RatedSound
+func (a ByBlockNumbers) Len() int           { return len(a) }
+func (a ByBlockNumbers) Less(i, j int) bool { return a[i].BlockNumber > a[j].BlockNumber }
+func (a ByBlockNumbers) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
 type ByRating []RatedSound
 func (a ByRating) Len() int           { return len(a) }

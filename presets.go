@@ -10,7 +10,9 @@ import (
 	"net/http"
 )
 
-const PRESETS_CONTRACT = "0x45aC8aCbEba84071D4e549d4dCd273E01E5a8daF";
+const OG_PRESETS_CONTRACT = "0x45aC8aCbEba84071D4e549d4dCd273E01E5a8daF";
+const MID_PRESETS_CONTRACT = "0x62595809ACbf880Db1817720604eCdaEF21cb1a6";
+const  PRESETS_CONTRACT =  "0x9b2D4390C72e62638Ec894F3c246cF03D190c67B";
 
 type PresetQuery struct {
 	User string `json:"user"`
@@ -47,7 +49,7 @@ func runPresetQuery(caches *Caches, query PresetQuery) []map[string]interface{} 
 	instQuery := NewQuery(PRESETS_CONTRACT)
 	instQuery.From(PresetInstrumentType)
 	instQuery.WhereIs("instrumentType", query.InstrumentType);
-	instQuery.FromBlockNumber = query.FromBlockNumber;
+	// instQuery.FromBlockNumber = query.FromBlockNumber;
 
 	if (len(query.ContentHashes) > 0) {
 		// filter by content hashes
@@ -62,7 +64,6 @@ func runPresetQuery(caches *Caches, query PresetQuery) []map[string]interface{} 
 	for _, result := range instQuery.ExecuteQuery(caches) {
 		instResults = append(instResults, result["contentHash"])
 	}
-
 	presetsQuery := NewQuery(PRESETS_CONTRACT)
 	presetsQuery.From(NewPreset)
 	presetsQuery.WhereIn("contentHash", instResults)

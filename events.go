@@ -9,6 +9,7 @@ const NewDiscogsSample = "NewDiscogsSample(bytes32,uint256,bytes32,uint32)"
 const ReleaseInfo = "ReleaseInfo(bytes32,uint32,string,bytes32,bytes32)"
 const Sample = "ReleaseInfo(bytes32,uint32,string,bytes32,bytes32)"
 const SequenceEdited = "SequenceEdited(address,bytes32,bytes32,string,uint32)"
+const ProjectEdited = "ProjectEdited(address,bytes32,bytes32,string)"
 const SequenceEditedOld = "SequenceEdited(address,bytes32,bytes32,string)"
 const SampleInSequence = "SampleInSequence(bytes32,bytes32)"
 const SampleByArtist = "SampleByArtist(bytes32,bytes32)"
@@ -28,10 +29,12 @@ const NewAnnotation = "NewAnnotation(bytes32,bytes32,bytes32,address)"
 const NewPack = "NewPack(address,bytes32,bytes32,bytes32)"
 const PackHasContent = "PackHasContent(bytes32,bytes32)"
 const UserLeftGuild = "UserLeftGuild(uint256,address)"
+const SongConfigurationStem= "SongConfigurationStem(uint256,uint256)"
     
 // have max 2 keys to index on - so that they can do sub-sorting based on the other key
 var TableIndices = map[string][]string {
 	SampleCreated: []string{"guildId", "ipfsHash"},
+	SongConfigurationStem: []string{"configId", "stemId"},
 	SampleTagged: []string{"tag", "ipfsHash"},
 	SampleYear: []string{"year", "ipfsHash"},
 	SampleYoutube: []string{"videoId", "ipfsHash"},

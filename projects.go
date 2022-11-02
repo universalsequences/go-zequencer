@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"encoding/json"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 
 const OLD_TOKENIZED_SEQUENCES = "0x606f760c228cd5f11c6f79de64d3b299b11f1ed1"
 const TOKENIZED_SEQUENCES = "0x27Fd050dF7c0c603A407f1BC4fd0ED634824270E";
+const V3_PROJECTS_CONTRACT = "0xD3d9ee5d5467c1C9e4Ae3dA5e225882F46Bd45aA";
 
 type ProjectsQuery struct {
 	SearchTerm string `json:"searchTerm"`
@@ -66,7 +68,7 @@ func HandleProjectsQuery(
 }
 
 func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
-	contract := TOKENIZED_SEQUENCES;
+	contract := V3_PROJECTS_CONTRACT;
 	if (query.Old) {
 		contract = OLD_TOKENIZED_SEQUENCES;
 	}
@@ -74,7 +76,7 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 	if (query.Old) {
 		queryBuilder.From(SequenceEditedOld)
 	} else {
-		queryBuilder.From(SequenceEdited)
+		queryBuilder.From(ProjectEdited)
 	}
 	queryBuilder.Select("previousSequence")
 	queryBuilder.Select("newSequence")
@@ -84,6 +86,7 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 	if (query.FilterMine || query.User != "") {
 		queryBuilder.WhereIs("user", query.User)
 	}
+
 	results := []map[string]interface{}{}
 	for _, guildId := range query.GuildIds {
 		if (guildId == 0) {
@@ -92,6 +95,8 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 		}
 	}
 	projectResults := convertToProjects(results)
+
+	fmt.Println(projectResults)
 	guildResults := getGuildSequences(caches, query.GuildIds, query.FilterMine, query.User)
 	for _, result := range guildResults {
 		projectResults = append(projectResults, result)

@@ -37,6 +37,7 @@ type Project struct {
 	GuildId float64 `json:"guildId"`
 	Collaborators []string `json:"collaborators"`
 	BPM float64 `json:"bpm"`
+	Metadata ProjectMetadata `json:metadata`
 }
 
 
@@ -94,9 +95,17 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 			break
 		}
 	}
-	projectResults := convertToProjects(results)
 
-	fmt.Println(projectResults)
+	ids := []string{}
+	for _, result := range(results) {
+		id := result["newSequence"].(string)
+		ids = append(ids, id)
+	}
+	projectsMetadata := GetProjectsMetadata(caches, ids)
+	fmt.Println("Got the project metadata")
+	
+	projectResults := convertToProjects(results, projectsMetadata)
+
 	guildResults := getGuildSequences(caches, query.GuildIds, query.FilterMine, query.User)
 	for _, result := range guildResults {
 		projectResults = append(projectResults, result)
@@ -164,8 +173,7 @@ func runProjectsQuery(caches *Caches, query ProjectsQuery) []Project {
 	return collapseProjects(filtered) //collapseProjects(convertToProjects(filtered))
 }
 
-func convertToProjects(
-	results []map[string]interface{}) []Project {
+func convertToProjects(results []map[string]interface{}, projectsMetadata map[string]ProjectMetadata) []Project {
 	projects := []Project{}
 	for _, result := range results {
 		previousSequence, ok := result["previousSequence"].(string)
@@ -188,6 +196,7 @@ func convertToProjects(
 				Title: result["title"].(string),
 				BlockNumber: result["blockNumber"].(float64),
 				BPM: bpm,
+				Metadata: projectsMetadata[id],
 			})
 	}
 	return projects

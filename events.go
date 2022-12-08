@@ -30,6 +30,9 @@ const NewPack = "NewPack(address,bytes32,bytes32,bytes32)"
 const PackHasContent = "PackHasContent(bytes32,bytes32)"
 const UserLeftGuild = "UserLeftGuild(uint256,address)"
 const SongConfigurationStem= "SongConfigurationStem(uint256,uint256)"
+const ProjectPatternsCount = "ProjectPatternsCount(bytes32,int8)"
+const ProjectVisuals= "ProjectVisuals(bytes32,bytes32)"
+const ProjectBPM = "ProjectBPM(bytes32,int16)"
     
 // have max 2 keys to index on - so that they can do sub-sorting based on the other key
 var TableIndices = map[string][]string {

@@ -43,7 +43,7 @@ func HandleReloadRequest(
 
 		// certain contracts getting updated should result in clearing the cache
 		// since the results may have changed
-		if (contract == TOKENIZED_SEQUENCES ||
+		if (contract == V3_PROJECTS_CONTRACT || 
 			contract == XANADU ||
 			contract == GUILD_SEQUENCES) {
 			projectsCachedQueries.Clear()

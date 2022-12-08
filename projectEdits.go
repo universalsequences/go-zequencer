@@ -64,7 +64,8 @@ func getProject(caches *Caches, projectId string) Project {
 	queryBuilder.Select("user")
 	queryBuilder.WhereIs("newSequence", projectId)
 
-	projects := convertToProjects(queryBuilder.ExecuteQuery(caches))
+	projectMetadata := map[string]ProjectMetadata{}
+	projects := convertToProjects(queryBuilder.ExecuteQuery(caches), projectMetadata)
 	if (len(projects) > 0) {
 		return projects[0]
 	}

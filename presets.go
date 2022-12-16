@@ -2,6 +2,7 @@ package main
 
 import (
 	"strings"
+	"sort"
 	"fmt"
 	"io/ioutil"
 	"encoding/hex"
@@ -12,7 +13,8 @@ import (
 
 const OG_PRESETS_CONTRACT = "0x45aC8aCbEba84071D4e549d4dCd273E01E5a8daF";
 const MID_PRESETS_CONTRACT = "0x62595809ACbf880Db1817720604eCdaEF21cb1a6";
-const  PRESETS_CONTRACT =  "0x9b2D4390C72e62638Ec894F3c246cF03D190c67B";
+//const  PRESETS_CONTRACT =  "0x9b2D4390C72e62638Ec894F3c246cF03D190c67B";
+const  PRESETS_CONTRACT =  "0xFf42e6c5f19f3B20fe6Fd6f3e549487A5beF122d";
 
 type PresetQuery struct {
 	User string `json:"user"`
@@ -130,6 +132,7 @@ func runPresetQuery(caches *Caches, query PresetQuery) []map[string]interface{} 
 		row["contentHash"] = result["contentHash"]
 		row["user"] = result["user"]
 		row["guildId"] = result["guildId"]
+		row["id"] = result["id"]
 		if (query.GuildId != 0.0) {
 			row["encryptedName"] = result["encryptedName"]
 			row["publicKey"] = result["publicKey"]
@@ -137,7 +140,9 @@ func runPresetQuery(caches *Caches, query PresetQuery) []map[string]interface{} 
 		}
 		results = append(results, row)	
 	}
-	return pruneContent(results, "contentHash")
+	content := pruneContent(results, "contentHash")
+	sort.Sort(ById(content))
+	return content
 }
 
 func getTagsForPresets(caches *Caches, contentHashes []interface{}) map[string][]string {
@@ -202,4 +207,17 @@ func getPacksForPresets(caches *Caches, contentHashes []interface{}) map[string]
 
 
 
+
+type ById [] map[string]interface{};
+func (a ById) Len() int           { return len(a) }
+func (a ById) Less(i, j int) bool {
+	if _a, ok := a[i]["id"].(float64); ok {
+		if _b, ok2 := a[j]["id"].(float64); ok2 {
+			return _a > _b;
+		}
+	}
+	return true;
+	//return a[i]["id"].(float64)> a[j]["id"].(float64);
+}
+func (a ById) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 

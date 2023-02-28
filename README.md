@@ -24,6 +24,9 @@ Ex: CONTRACT_ADDRESS_1.json
 
 # How I Use It
 
+This is how all the ethereume event logs in the Zequencer & Spores universes are searched.
+There are several Zequencer-specific functions for searching a huge saample library in certain ways. For instance,  grouping "by day" or "by album/video".
+
 1. I have a seperate node.js script that fetches all the events for a set of (contract, eventType) pairs and writes the outputs to these files.
 2. When any event occurs & updates the files, I sends an http request to the go-zequencer server saying "we've updated contract x"
 3. go-zequencer reads the files for "contract x" (that has just updated), and updates the in-memory mapping of the entire event space
@@ -33,3 +36,5 @@ This is bad for when you have a ton of data (like storing every NFT ever). Howev
 for "smaller/medium" amounts of data. 
 
 The main usecase here, is when you care about a certain set of contracts and its events, and want lightning fast data availability.
+
+

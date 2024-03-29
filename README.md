@@ -1,6 +1,6 @@
 # go-zequencer
 
-An efficient (in-memory) cache server of Ethereum Event Logs. Allows for constructing SQL-like search queries on "tables" (Ethereum Event Types), 
+An efficient (in-memory) cache server of Ethereum Event Logs used in Zequencer. Allows for constructing SQL-like search queries on "tables" (Ethereum Event Types), 
 partitioned by contract.
 
 To compile, simply do:
@@ -36,5 +36,7 @@ This is bad for when you have a ton of data (like storing every NFT ever). Howev
 for "smaller/medium" amounts of data. 
 
 The main usecase here, is when you care about a certain set of contracts and its events, and want lightning fast data availability.
+
+Also all the contracts and events are hardcoded and Zequencer-specific. Making it more general-purpose would allow this system to be used 
 
 
